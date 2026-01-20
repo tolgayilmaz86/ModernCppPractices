@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "01_RAII/RAIISample.hpp"
 #include "02_SFINAE/SFINAESample.hpp"
+#include "03_CRTP/CRTPSample.hpp"
 
 TEST(HelloTest, BasicAssertions) {
     EXPECT_STRNE("hello", "world");
@@ -17,6 +18,12 @@ TEST(Samples, RAII) {
 TEST(Samples, SFINAE) {
     SFINAESample sample;
     // This will run the SFINAE demonstration
+    sample.run();
+}
+
+TEST(Samples, CRTP) {
+    CRTPSample sample;
+    // This will run the CRTP demonstration
     sample.run();
 }
 

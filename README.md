@@ -17,7 +17,11 @@ ModernCppPractices/
 │       ├── README.md
 │       ├── SFINAESample.hpp
 │       └── SFINAESample.cpp
-│   └── [03-10]_*/               # Additional practice examples
+│   └── 03_CRTP/                 # Curiously Recurring Template Pattern
+│       ├── README.md
+│       ├── CRTPSample.hpp
+│       └── CRTPSample.cpp
+│   └── [04-10]_*/               # Additional practice examples
 ├── tests/                       # Unit testing framework
 │   ├── CMakeLists.txt          # Test build configuration
 │   └── test.cpp                # Test suite implementation
@@ -153,6 +157,7 @@ ctest --test-dir build
 # Available samples:
 # 1: 01_RAII - Resource Acquisition Is Initialization
 # 2: 02_SFINAE - Substitution Failure Is Not An Error
+# 3: 03_CRTP - Curiously Recurring Template Pattern
 ```
 
 #### Using Runner Scripts

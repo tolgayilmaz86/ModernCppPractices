@@ -1,6 +1,6 @@
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
-add_executable(unit_tests test.cpp ../src/01_RAII/RAIISample.cpp ../src/02_SFINAE/SFINAESample.cpp)
+add_executable(unit_tests test.cpp ../src/01_RAII/RAIISample.cpp ../src/02_SFINAE/SFINAESample.cpp ../src/03_CRTP/CRTPSample.cpp)
 
 target_link_libraries(unit_tests GTest::gtest)
 
