@@ -21,7 +21,11 @@ ModernCppPractices/
 │       ├── README.md
 │       ├── CRTPSample.hpp
 │       └── CRTPSample.cpp
-│   └── [04-10]_*/               # Additional practice examples
+│   └── 04_PIMPL/                 # Pointer to Implementation
+│       ├── README.md
+│       ├── PimplSample.hpp
+│       └── PimplSample.cpp
+│   └── [05-10]_*/               # Additional practice examples
 ├── tests/                       # Unit testing framework
 │   ├── CMakeLists.txt          # Test build configuration
 │   └── test.cpp                # Test suite implementation
@@ -158,6 +162,7 @@ ctest --test-dir build
 # 1: 01_RAII - Resource Acquisition Is Initialization
 # 2: 02_SFINAE - Substitution Failure Is Not An Error
 # 3: 03_CRTP - Curiously Recurring Template Pattern
+# 4: 04_PIMPL - Pointer to Implementation
 ```
 
 #### Using Runner Scripts
@@ -227,7 +232,8 @@ run.bat 02                 # Windows batch script
    add_executable(unit_tests test.cpp
        ../src/01_RAII/RAIISample.cpp
        ../src/02_SFINAE/SFINAESample.cpp
-       ../src/03_CRTP/CRTPSample.cpp)  # Add new sample
+       ../src/03_CRTP/CRTPSample.cpp
+       ../src/04_PIMPL/PimplSample.cpp)  # Add new sample
    ```
 
 7. **Update Documentation**

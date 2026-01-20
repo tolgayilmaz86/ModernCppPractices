@@ -2,6 +2,7 @@
 #include "01_RAII/RAIISample.hpp"
 #include "02_SFINAE/SFINAESample.hpp"
 #include "03_CRTP/CRTPSample.hpp"
+#include "04_PIMPL/PimplSample.hpp"
 
 TEST(HelloTest, BasicAssertions) {
     EXPECT_STRNE("hello", "world");
@@ -24,6 +25,12 @@ TEST(Samples, SFINAE) {
 TEST(Samples, CRTP) {
     CRTPSample sample;
     // This will run the CRTP demonstration
+    sample.run();
+}
+
+TEST(Samples, PIMPL) {
+    PimplSample sample;
+    // This will run the Pimpl demonstration
     sample.run();
 }
 

@@ -5,12 +5,14 @@
 #include "01_RAII/RAIISample.hpp"
 #include "02_SFINAE/SFINAESample.hpp"
 #include "03_CRTP/CRTPSample.hpp"
+#include "04_PIMPL/PimplSample.hpp"
 
 int main(int argc, char* argv[]) {
     std::vector<std::unique_ptr<Testable>> samples;
     samples.push_back(std::make_unique<RAIISample>());
     samples.push_back(std::make_unique<SFINAESample>());
     samples.push_back(std::make_unique<CRTPSample>());
+    samples.push_back(std::make_unique<PimplSample>());
 
     if (argc > 1) {
         try {
