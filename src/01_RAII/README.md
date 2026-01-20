@@ -4,6 +4,78 @@
 
 RAII is a C++ programming idiom that ties resource management to object lifetime. Resources are acquired during object construction and released during object destruction, ensuring that resources are properly cleaned up even in the presence of exceptions.
 
+**The Problem:**
+Resources (memory, files, sockets, mutexes) need to be released after use. Forgetting to release them causes leaks. Exception paths make manual cleanup even harder.
+
+```cpp
+// ❌ BAD: Manual resource management - easy to leak!
+void processFile(const std::string& path) {
+    FILE* file = fopen(path.c_str(), "r");
+    if (!file) return;  // OK
+    
+    try {
+        doSomething();     // What if this throws?
+        doSomethingElse(); // Or this?
+    } catch (...) {
+        fclose(file);      // Must remember to close here!
+        throw;
+    }
+    
+    fclose(file);  // And here! Easy to forget.
+}
+```
+
+**The Solution: RAII**
+Tie the resource lifetime to an object's lifetime. Acquire in constructor, release in destructor. C++ guarantees destructors run when objects go out of scope - even during exceptions!
+
+```cpp
+// ✅ GOOD: RAII wrapper handles cleanup automatically
+class FileHandle {
+    FILE* file;
+public:
+    explicit FileHandle(const std::string& path) 
+        : file(fopen(path.c_str(), "r")) 
+    {
+        if (!file) throw std::runtime_error("Cannot open file");
+    }
+    
+    ~FileHandle() { 
+        if (file) fclose(file);  // Always called, even during exceptions!
+    }
+    
+    // Prevent copying (or implement deep copy)
+    FileHandle(const FileHandle&) = delete;
+    FileHandle& operator=(const FileHandle&) = delete;
+    
+    // Allow moving
+    FileHandle(FileHandle&& other) noexcept : file(other.file) {
+        other.file = nullptr;
+    }
+    
+    FILE* get() { return file; }
+};
+
+void processFile(const std::string& path) {
+    FileHandle file(path);  // Resource acquired
+    doSomething();          // If this throws...
+    doSomethingElse();      // Or this...
+}   // file destructor ALWAYS runs - no leak possible!
+```
+
+**RAII in the Standard Library:**
+| Resource | RAII Wrapper |
+|----------|--------------|
+| Heap memory | `std::unique_ptr`, `std::shared_ptr` |
+| Arrays | `std::vector`, `std::array` |
+| Strings | `std::string` |
+| Files | `std::fstream`, `std::ifstream`, `std::ofstream` |
+| Mutexes | `std::lock_guard`, `std::unique_lock`, `std::scoped_lock` |
+| Threads | `std::jthread` (C++20) |
+
+**Key Insight:** If you're writing `new`/`delete`, `malloc`/`free`, `fopen`/`fclose`, or any acquire/release pair manually, you probably need an RAII wrapper instead!
+
+---
+
 ## Key Benefits
 
 - **Automatic Resource Management**: No need to manually release resources

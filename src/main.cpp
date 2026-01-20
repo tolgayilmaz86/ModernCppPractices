@@ -3,10 +3,12 @@
 #include <memory>
 #include "Testable.hpp"
 #include "01_RAII/RAIISample.hpp"
+#include "02_SFINAE/SFINAESample.hpp"
 
 int main(int argc, char* argv[]) {
     std::vector<std::unique_ptr<Testable>> samples;
     samples.push_back(std::make_unique<RAIISample>());
+    samples.push_back(std::make_unique<SFINAESample>());
 
     if (argc > 1) {
         try {

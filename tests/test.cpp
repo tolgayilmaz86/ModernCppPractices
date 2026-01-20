@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
-#include "../src/01_RAII/RAIISample.hpp"
+#include "01_RAII/RAIISample.hpp"
+#include "02_SFINAE/SFINAESample.hpp"
 
 TEST(HelloTest, BasicAssertions) {
     EXPECT_STRNE("hello", "world");
@@ -10,6 +11,12 @@ TEST(Samples, RAII) {
     RAIISample sample;
     // This will run the RAII demonstration
     // In a real test, you might want to verify specific behavior
+    sample.run();
+}
+
+TEST(Samples, SFINAE) {
+    SFINAESample sample;
+    // This will run the SFINAE demonstration
     sample.run();
 }
 

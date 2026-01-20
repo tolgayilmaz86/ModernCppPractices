@@ -8,6 +8,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+include_directories(src)
+
 find_package(GTest CONFIG REQUIRED)
 
 file(GLOB_RECURSE SOURCES src/*.cpp)

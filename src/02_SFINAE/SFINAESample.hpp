@@ -2,10 +2,10 @@
 
 #include "Testable.hpp"
 
-class RAIISample : public Testable {
+class SFINAESample : public Testable {
 public:
     void run() override;
     std::string name() const override {
-        return "01_RAII - Resource Acquisition Is Initialization";
+        return "02_SFINAE - Substitution Failure Is Not An Error";
     }
 };

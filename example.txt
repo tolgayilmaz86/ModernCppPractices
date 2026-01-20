@@ -1,0 +1,3 @@
+Hello, RAII!
+This file will be automatically closed.
+No need to manually call close().
