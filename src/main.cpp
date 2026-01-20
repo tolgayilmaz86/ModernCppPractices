@@ -1,0 +1,31 @@
+#include <iostream>
+#include <vector>
+#include <memory>
+#include "Testable.hpp"
+#include "01_RAII/RAIISample.hpp"
+
+int main(int argc, char* argv[]) {
+    std::vector<std::unique_ptr<Testable>> samples;
+    samples.push_back(std::make_unique<RAIISample>());
+
+    if (argc > 1) {
+        try {
+            int num = std::stoi(argv[1]);
+            if (num >= 1 && num <= static_cast<int>(samples.size())) {
+                samples[num - 1]->run();
+            } else {
+                std::cout << "Invalid sample number. Available samples: 1-" << samples.size() << std::endl;
+            }
+        } catch (const std::exception&) {
+            std::cout << "Invalid argument. Please provide a number." << std::endl;
+        }
+    } else {
+        std::cout << "Available samples:" << std::endl;
+        for (size_t i = 0; i < samples.size(); ++i) {
+            std::cout << i + 1 << ": " << samples[i]->name() << std::endl;
+        }
+        std::cout << "Run with: ./main <number>" << std::endl;
+    }
+
+    return 0;
+}
