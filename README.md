@@ -37,7 +37,11 @@ ModernCppPractices/
 │       ├── README.md
 │       ├── VariantVisitorSample.hpp
 │       └── VariantVisitorSample.cpp
-│   └── [08-10]_*/               # Additional practice examples
+│   └── 08_SmartPointers/         # Smart Pointers
+│       ├── README.md
+│       ├── SmartPointersSample.hpp
+│       └── SmartPointersSample.cpp
+│   └── [09-10]_*/               # Additional practice examples
 ├── tests/                       # Unit testing framework
 │   ├── CMakeLists.txt          # Test build configuration
 │   └── test.cpp                # Test suite implementation
@@ -178,6 +182,7 @@ ctest --test-dir build
 # 5: 05_RuleOfFive - Rule of Five
 # 6: 06_TypeErasure - Type Erasure
 # 7: 07_VariantVisitor - Variant and Visitor Pattern
+# 8: 08_SmartPointers - Smart Pointers
 ```
 
 #### Using Runner Scripts
@@ -249,7 +254,10 @@ run.bat 02                 # Windows batch script
        ../src/02_SFINAE/SFINAESample.cpp
        ../src/03_CRTP/CRTPSample.cpp
        ../src/04_PIMPL/PimplSample.cpp
-       ../src/05_RuleOfFive/RuleOfFiveSample.cpp)  # Add new sample
+       ../src/05_RuleOfFive/RuleOfFiveSample.cpp
+       ../src/06_TypeErasure/TypeErasureSample.cpp
+       ../src/07_VariantVisitor/VariantVisitorSample.cpp
+       ../src/08_SmartPointers/SmartPointersSample.cpp)  # Add new sample
    ```
 
 7. **Update Documentation**

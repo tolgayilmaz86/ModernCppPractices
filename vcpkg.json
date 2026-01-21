@@ -2,9 +2,6 @@
   "name": "modern-cpp-practices",
   "version": "1.0.0",
   "dependencies": [
-    {
-      "name": "gtest",
-      "features": ["static"]
-    }
+    "gtest"
   ]
 }

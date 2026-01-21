@@ -10,13 +10,15 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 include_directories(src)
 
-find_package(GTest CONFIG REQUIRED)
+# GTest is only needed for tests
+# find_package(GTest CONFIG REQUIRED)
 
 file(GLOB_RECURSE SOURCES src/*.cpp)
 
 add_executable(main ${SOURCES})
 
-target_link_libraries(main GTest::gtest_main)
+# Main executable doesn't need GTest - only tests do
+# target_link_libraries(main GTest::gtest_main)
 
 add_subdirectory(tests)
 

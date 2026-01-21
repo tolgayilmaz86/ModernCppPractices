@@ -6,6 +6,7 @@
 #include "05_RuleOfFive/RuleOfFiveSample.hpp"
 #include "06_TypeErasure/TypeErasureSample.hpp"
 #include "07_VariantVisitor/VariantVisitorSample.hpp"
+#include "08_SmartPointers/SmartPointersSample.hpp"
 
 TEST(Samples, RAII) {
     RAIISample sample;
@@ -47,6 +48,12 @@ TEST(Samples, TypeErasure) {
 TEST(Samples, VariantVisitor) {
     VariantVisitorSample sample;
     // This will run the Variant Visitor demonstration
+    sample.run();
+}
+
+TEST(Samples, SmartPointers) {
+    SmartPointersSample sample;
+    // This will run the Smart Pointers demonstration
     sample.run();
 }
 
