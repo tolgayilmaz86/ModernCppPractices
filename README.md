@@ -33,7 +33,11 @@ ModernCppPractices/
 │       ├── README.md
 │       ├── TypeErasureSample.hpp
 │       └── TypeErasureSample.cpp
-│   └── [07-10]_*/               # Additional practice examples
+│   └── 07_VariantVisitor/       # Variant and Visitor Pattern
+│       ├── README.md
+│       ├── VariantVisitorSample.hpp
+│       └── VariantVisitorSample.cpp
+│   └── [08-10]_*/               # Additional practice examples
 ├── tests/                       # Unit testing framework
 │   ├── CMakeLists.txt          # Test build configuration
 │   └── test.cpp                # Test suite implementation
@@ -173,6 +177,7 @@ ctest --test-dir build
 # 4: 04_PIMPL - Pointer to Implementation
 # 5: 05_RuleOfFive - Rule of Five
 # 6: 06_TypeErasure - Type Erasure
+# 7: 07_VariantVisitor - Variant and Visitor Pattern
 ```
 
 #### Using Runner Scripts

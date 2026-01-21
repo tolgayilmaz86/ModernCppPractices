@@ -8,6 +8,7 @@
 #include "04_PIMPL/PimplSample.hpp"
 #include "05_RuleOfFive/RuleOfFiveSample.hpp"
 #include "06_TypeErasure/TypeErasureSample.hpp"
+#include "07_VariantVisitor/VariantVisitorSample.hpp"
 
 int main(int argc, char* argv[]) {
     std::vector<std::unique_ptr<Testable>> samples;
@@ -17,6 +18,7 @@ int main(int argc, char* argv[]) {
     samples.push_back(std::make_unique<PimplSample>());
     samples.push_back(std::make_unique<RuleOfFiveSample>());
     samples.push_back(std::make_unique<TypeErasureSample>());
+    samples.push_back(std::make_unique<VariantVisitorSample>());
 
     if (argc > 1) {
         try {

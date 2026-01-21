@@ -5,11 +5,7 @@
 #include "04_PIMPL/PimplSample.hpp"
 #include "05_RuleOfFive/RuleOfFiveSample.hpp"
 #include "06_TypeErasure/TypeErasureSample.hpp"
-
-TEST(HelloTest, BasicAssertions) {
-    EXPECT_STRNE("hello", "world");
-    EXPECT_EQ(7 * 6, 42);
-}
+#include "07_VariantVisitor/VariantVisitorSample.hpp"
 
 TEST(Samples, RAII) {
     RAIISample sample;
@@ -45,6 +41,12 @@ TEST(Samples, RuleOfFive) {
 TEST(Samples, TypeErasure) {
     TypeErasureSample sample;
     // This will run the Type Erasure demonstration
+    sample.run();
+}
+
+TEST(Samples, VariantVisitor) {
+    VariantVisitorSample sample;
+    // This will run the Variant Visitor demonstration
     sample.run();
 }
 
