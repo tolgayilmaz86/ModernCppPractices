@@ -11,6 +11,7 @@
 #include "07_VariantVisitor/VariantVisitorSample.hpp"
 #include "08_SmartPointers/SmartPointersSample.hpp"
 #include "09_ExceptionSafety/ExceptionSafetySample.hpp"
+#include "10_MoveSemantics/MoveSemanticsSample.hpp"
 
 int main(int argc, char* argv[]) {
     std::vector<std::unique_ptr<Testable>> samples;
@@ -23,6 +24,7 @@ int main(int argc, char* argv[]) {
     samples.push_back(std::make_unique<VariantVisitorSample>());
     samples.push_back(std::make_unique<SmartPointersSample>());
     samples.push_back(std::make_unique<ExceptionSafetySample>());
+    samples.push_back(std::make_unique<MoveSemanticsSample>());
 
     if (argc > 1) {
         try {

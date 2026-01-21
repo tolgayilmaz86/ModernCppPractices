@@ -8,6 +8,7 @@
 #include "07_VariantVisitor/VariantVisitorSample.hpp"
 #include "08_SmartPointers/SmartPointersSample.hpp"
 #include "09_ExceptionSafety/ExceptionSafetySample.hpp"
+#include "10_MoveSemantics/MoveSemanticsSample.hpp"
 
 TEST(Samples, RAII) {
     RAIISample sample;
@@ -61,6 +62,12 @@ TEST(Samples, SmartPointers) {
 TEST(Samples, ExceptionSafety) {
     ExceptionSafetySample sample;
     // This will run the Exception Safety demonstration
+    sample.run();
+}
+
+TEST(Samples, MoveSemantics) {
+    MoveSemanticsSample sample;
+    // This will run the Move Semantics demonstration
     sample.run();
 }
 
