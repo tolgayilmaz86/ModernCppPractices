@@ -41,7 +41,11 @@ ModernCppPractices/
 │       ├── README.md
 │       ├── SmartPointersSample.hpp
 │       └── SmartPointersSample.cpp
-│   └── [09-10]_*/               # Additional practice examples
+│   └── 09_ExceptionSafety/       # Exception Safety
+│       ├── README.md
+│       ├── ExceptionSafetySample.hpp
+│       └── ExceptionSafetySample.cpp
+│   └── [10]_*/                    # Additional practice examples
 ├── tests/                       # Unit testing framework
 │   ├── CMakeLists.txt          # Test build configuration
 │   └── test.cpp                # Test suite implementation
@@ -183,6 +187,7 @@ ctest --test-dir build
 # 6: 06_TypeErasure - Type Erasure
 # 7: 07_VariantVisitor - Variant and Visitor Pattern
 # 8: 08_SmartPointers - Smart Pointers
+# 9: 09_ExceptionSafety - Exception Safety
 ```
 
 #### Using Runner Scripts
@@ -257,7 +262,8 @@ run.bat 02                 # Windows batch script
        ../src/05_RuleOfFive/RuleOfFiveSample.cpp
        ../src/06_TypeErasure/TypeErasureSample.cpp
        ../src/07_VariantVisitor/VariantVisitorSample.cpp
-       ../src/08_SmartPointers/SmartPointersSample.cpp)  # Add new sample
+       ../src/08_SmartPointers/SmartPointersSample.cpp
+       ../src/09_ExceptionSafety/ExceptionSafetySample.cpp)  # Add new sample
    ```
 
 7. **Update Documentation**

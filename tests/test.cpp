@@ -7,6 +7,7 @@
 #include "06_TypeErasure/TypeErasureSample.hpp"
 #include "07_VariantVisitor/VariantVisitorSample.hpp"
 #include "08_SmartPointers/SmartPointersSample.hpp"
+#include "09_ExceptionSafety/ExceptionSafetySample.hpp"
 
 TEST(Samples, RAII) {
     RAIISample sample;
@@ -54,6 +55,12 @@ TEST(Samples, VariantVisitor) {
 TEST(Samples, SmartPointers) {
     SmartPointersSample sample;
     // This will run the Smart Pointers demonstration
+    sample.run();
+}
+
+TEST(Samples, ExceptionSafety) {
+    ExceptionSafetySample sample;
+    // This will run the Exception Safety demonstration
     sample.run();
 }
 
