@@ -91,7 +91,8 @@ Test Execution Flow:
 | **Deep vs Shallow Copy** | Understanding copy semantics for complex objects |
 | **Copy and Swap Idiom** | Exception-safe assignment operators |
 | **C++ Cast Types** | Safe type conversions, avoiding C-style casts |
-| **Thread Safety** | Writing concurrent code, avoiding data
+| **Thread Safety** | Writing concurrent code, avoiding data |
+| **Concepts** | Template constraints, clearer intent in generic code |
 
 ## 🚀 Building and Running
 

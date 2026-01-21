@@ -1,11 +1,10 @@
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
-set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake")
-set(CMAKE_PREFIX_PATH "C:/vcpkg/installed/x64-windows")
+# vcpkg toolchain is inherited from parent CMakeLists.txt
 
 find_package(GTest CONFIG REQUIRED)
 
-add_executable(unit_tests test.cpp ../src/01_RAII/RAIISample.cpp ../src/02_SFINAE/SFINAESample.cpp ../src/03_CRTP/CRTPSample.cpp ../src/04_PIMPL/PimplSample.cpp ../src/05_RuleOfFive/RuleOfFiveSample.cpp ../src/06_TypeErasure/TypeErasureSample.cpp ../src/07_VariantVisitor/VariantVisitorSample.cpp ../src/08_SmartPointers/SmartPointersSample.cpp ../src/09_ExceptionSafety/ExceptionSafetySample.cpp ../src/10_MoveSemantics/MoveSemanticsSample.cpp ../src/11_TagDispatching/TagDispatchingSample.cpp ../src/12_DeepShallowCopy/DeepShallowCopySample.cpp ../src/13_CopyAndSwapIdiom/CopyAndSwapIdiomSample.cpp ../src/14_Cast/CastSample.cpp ../src/15_ThreadSafety/ThreadSafetySample.cpp)
+add_executable(unit_tests test.cpp ../src/01_RAII/RAIISample.cpp ../src/02_SFINAE/SFINAESample.cpp ../src/03_CRTP/CRTPSample.cpp ../src/04_PIMPL/PimplSample.cpp ../src/05_RuleOfFive/RuleOfFiveSample.cpp ../src/06_TypeErasure/TypeErasureSample.cpp ../src/07_VariantVisitor/VariantVisitorSample.cpp ../src/08_SmartPointers/SmartPointersSample.cpp ../src/09_ExceptionSafety/ExceptionSafetySample.cpp ../src/10_MoveSemantics/MoveSemanticsSample.cpp ../src/11_TagDispatching/TagDispatchingSample.cpp ../src/12_DeepShallowCopy/DeepShallowCopySample.cpp ../src/13_CopyAndSwapIdiom/CopyAndSwapIdiomSample.cpp ../src/14_Cast/CastSample.cpp ../src/15_ThreadSafety/ThreadSafetySample.cpp ../src/16_Concepts/ConceptsSample.cpp)
 
 target_link_libraries(unit_tests GTest::gtest GTest::gtest_main)
 

@@ -14,6 +14,7 @@
 #include "13_CopyAndSwapIdiom/CopyAndSwapIdiomSample.hpp"
 #include "14_Cast/CastSample.hpp"
 #include "15_ThreadSafety/ThreadSafetySample.hpp"
+#include "16_Concepts/ConceptsSample.hpp"
 
 TEST(Samples, RAII) {
     RAIISample sample;
@@ -103,6 +104,12 @@ TEST(Samples, Cast) {
 TEST(Samples, ThreadSafety) {
     ThreadSafetySample sample;
     // This will run the Thread Safety demonstration
+    sample.run();
+}
+
+TEST(Samples, Concepts) {
+    ConceptsSample sample;
+    // This will run the C++20 Concepts demonstration
     sample.run();
 }
 
