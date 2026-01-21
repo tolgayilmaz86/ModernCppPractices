@@ -25,7 +25,11 @@ ModernCppPractices/
 │       ├── README.md
 │       ├── PimplSample.hpp
 │       └── PimplSample.cpp
-│   └── [05-10]_*/               # Additional practice examples
+│   └── 05_RuleOfFive/            # Rule of Five
+│       ├── README.md
+│       ├── RuleOfFiveSample.hpp
+│       └── RuleOfFiveSample.cpp
+│   └── [06-10]_*/               # Additional practice examples
 ├── tests/                       # Unit testing framework
 │   ├── CMakeLists.txt          # Test build configuration
 │   └── test.cpp                # Test suite implementation
@@ -163,6 +167,7 @@ ctest --test-dir build
 # 2: 02_SFINAE - Substitution Failure Is Not An Error
 # 3: 03_CRTP - Curiously Recurring Template Pattern
 # 4: 04_PIMPL - Pointer to Implementation
+# 5: 05_RuleOfFive - Rule of Five
 ```
 
 #### Using Runner Scripts
@@ -233,7 +238,8 @@ run.bat 02                 # Windows batch script
        ../src/01_RAII/RAIISample.cpp
        ../src/02_SFINAE/SFINAESample.cpp
        ../src/03_CRTP/CRTPSample.cpp
-       ../src/04_PIMPL/PimplSample.cpp)  # Add new sample
+       ../src/04_PIMPL/PimplSample.cpp
+       ../src/05_RuleOfFive/RuleOfFiveSample.cpp)  # Add new sample
    ```
 
 7. **Update Documentation**

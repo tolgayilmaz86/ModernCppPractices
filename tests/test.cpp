@@ -3,6 +3,7 @@
 #include "02_SFINAE/SFINAESample.hpp"
 #include "03_CRTP/CRTPSample.hpp"
 #include "04_PIMPL/PimplSample.hpp"
+#include "05_RuleOfFive/RuleOfFiveSample.hpp"
 
 TEST(HelloTest, BasicAssertions) {
     EXPECT_STRNE("hello", "world");
@@ -31,6 +32,12 @@ TEST(Samples, CRTP) {
 TEST(Samples, PIMPL) {
     PimplSample sample;
     // This will run the Pimpl demonstration
+    sample.run();
+}
+
+TEST(Samples, RuleOfFive) {
+    RuleOfFiveSample sample;
+    // This will run the Rule of Five demonstration
     sample.run();
 }
 

@@ -176,3 +176,4 @@ tramp
 # Test files
 test_output/
 *.test
+*.txt
