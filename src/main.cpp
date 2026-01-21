@@ -13,6 +13,8 @@
 #include "09_ExceptionSafety/ExceptionSafetySample.hpp"
 #include "10_MoveSemantics/MoveSemanticsSample.hpp"
 #include "11_TagDispatching/TagDispatchingSample.hpp"
+#include "13_CopyAndSwapIdiom/CopyAndSwapIdiomSample.hpp"
+#include "12_DeepShallowCopy/DeepShallowCopySample.hpp"
 
 int main(int argc, char* argv[]) {
     std::vector<std::unique_ptr<Testable>> samples;
@@ -27,6 +29,8 @@ int main(int argc, char* argv[]) {
     samples.push_back(std::make_unique<ExceptionSafetySample>());
     samples.push_back(std::make_unique<MoveSemanticsSample>());
     samples.push_back(std::make_unique<TagDispatchingSample>());
+    samples.push_back(std::make_unique<DeepShallowCopySample>());
+    samples.push_back(std::make_unique<CopyAndSwapIdiomSample>());
 
     if (argc > 1) {
         try {

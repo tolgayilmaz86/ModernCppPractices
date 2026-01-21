@@ -10,6 +10,8 @@
 #include "09_ExceptionSafety/ExceptionSafetySample.hpp"
 #include "10_MoveSemantics/MoveSemanticsSample.hpp"
 #include "11_TagDispatching/TagDispatchingSample.hpp"
+#include "12_DeepShallowCopy/DeepShallowCopySample.hpp"
+#include "13_CopyAndSwapIdiom/CopyAndSwapIdiomSample.hpp"
 
 TEST(Samples, RAII) {
     RAIISample sample;
@@ -75,6 +77,18 @@ TEST(Samples, MoveSemantics) {
 TEST(Samples, TagDispatching) {
     TagDispatchingSample sample;
     // This will run the Tag Dispatching demonstration
+    sample.run();
+}
+
+TEST(Samples, DeepShallowCopy) {
+    DeepShallowCopySample sample;
+    // This will run the Deep vs Shallow Copy demonstration
+    sample.run();
+}
+
+TEST(Samples, CopyAndSwapIdiom) {
+    CopyAndSwapIdiomSample sample;
+    // This will run the Copy and Swap Idiom demonstration
     sample.run();
 }
 
