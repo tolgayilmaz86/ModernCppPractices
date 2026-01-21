@@ -7,6 +7,7 @@
 #include "03_CRTP/CRTPSample.hpp"
 #include "04_PIMPL/PimplSample.hpp"
 #include "05_RuleOfFive/RuleOfFiveSample.hpp"
+#include "06_TypeErasure/TypeErasureSample.hpp"
 
 int main(int argc, char* argv[]) {
     std::vector<std::unique_ptr<Testable>> samples;
@@ -15,6 +16,7 @@ int main(int argc, char* argv[]) {
     samples.push_back(std::make_unique<CRTPSample>());
     samples.push_back(std::make_unique<PimplSample>());
     samples.push_back(std::make_unique<RuleOfFiveSample>());
+    samples.push_back(std::make_unique<TypeErasureSample>());
 
     if (argc > 1) {
         try {

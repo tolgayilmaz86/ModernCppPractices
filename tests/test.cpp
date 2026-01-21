@@ -4,6 +4,7 @@
 #include "03_CRTP/CRTPSample.hpp"
 #include "04_PIMPL/PimplSample.hpp"
 #include "05_RuleOfFive/RuleOfFiveSample.hpp"
+#include "06_TypeErasure/TypeErasureSample.hpp"
 
 TEST(HelloTest, BasicAssertions) {
     EXPECT_STRNE("hello", "world");
@@ -38,6 +39,12 @@ TEST(Samples, PIMPL) {
 TEST(Samples, RuleOfFive) {
     RuleOfFiveSample sample;
     // This will run the Rule of Five demonstration
+    sample.run();
+}
+
+TEST(Samples, TypeErasure) {
+    TypeErasureSample sample;
+    // This will run the Type Erasure demonstration
     sample.run();
 }
 

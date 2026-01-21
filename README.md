@@ -29,7 +29,11 @@ ModernCppPractices/
 │       ├── README.md
 │       ├── RuleOfFiveSample.hpp
 │       └── RuleOfFiveSample.cpp
-│   └── [06-10]_*/               # Additional practice examples
+│   └── 06_TypeErasure/          # Type Erasure
+│       ├── README.md
+│       ├── TypeErasureSample.hpp
+│       └── TypeErasureSample.cpp
+│   └── [07-10]_*/               # Additional practice examples
 ├── tests/                       # Unit testing framework
 │   ├── CMakeLists.txt          # Test build configuration
 │   └── test.cpp                # Test suite implementation
@@ -168,6 +172,7 @@ ctest --test-dir build
 # 3: 03_CRTP - Curiously Recurring Template Pattern
 # 4: 04_PIMPL - Pointer to Implementation
 # 5: 05_RuleOfFive - Rule of Five
+# 6: 06_TypeErasure - Type Erasure
 ```
 
 #### Using Runner Scripts
