@@ -1,5 +1,9 @@
 # Modern C++ Practices
 
+```markdown
+![Build Status](https://github.com/tolgayilmaz86/ModernCppPractices/actions/workflows/build.yml/badge.svg)
+```
+
 A comprehensive collection of Modern C++ practice examples demonstrating key idioms, patterns, and techniques. Each example is runnable, tested, and includes detailed documentation.
 
 ## 🏗️ Project Structure
