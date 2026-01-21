@@ -13,6 +13,7 @@
 #include "12_DeepShallowCopy/DeepShallowCopySample.hpp"
 #include "13_CopyAndSwapIdiom/CopyAndSwapIdiomSample.hpp"
 #include "14_Cast/CastSample.hpp"
+#include "15_ThreadSafety/ThreadSafetySample.hpp"
 
 TEST(Samples, RAII) {
     RAIISample sample;
@@ -96,6 +97,12 @@ TEST(Samples, CopyAndSwapIdiom) {
 TEST(Samples, Cast) {
     CastSample sample;
     // This will run the Cast Types demonstration
+    sample.run();
+}
+
+TEST(Samples, ThreadSafety) {
+    ThreadSafetySample sample;
+    // This will run the Thread Safety demonstration
     sample.run();
 }
 

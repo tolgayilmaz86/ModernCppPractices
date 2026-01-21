@@ -1,0 +1,156 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run All Samples (Debug)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/main.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal",
+            "preLaunchTask": "Build Debug"
+        },
+        {
+            "name": "Run All Samples (Release)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Release/main.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal",
+            "preLaunchTask": "Build Release"
+        },
+        {
+            "name": "Run Single Sample (Debug)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/main.exe",
+            "args": ["${input:sampleNumber}"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal",
+            "preLaunchTask": "Build Debug"
+        },
+        {
+            "name": "Run Unit Tests (Debug)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/tests/Debug/unit_tests.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "${workspaceFolder}/vcpkg_installed/x64-windows/bin;${env:PATH}"
+                }
+            ],
+            "console": "integratedTerminal",
+            "preLaunchTask": "Build Debug"
+        },
+        {
+            "name": "Run Unit Tests (Release)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/tests/Release/unit_tests.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "${workspaceFolder}/vcpkg_installed/x64-windows/bin;${env:PATH}"
+                }
+            ],
+            "console": "integratedTerminal",
+            "preLaunchTask": "Build Release"
+        },
+        {
+            "name": "Run Single Test (Debug)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/tests/Debug/unit_tests.exe",
+            "args": ["--gtest_filter=${input:testFilter}"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "${workspaceFolder}/vcpkg_installed/x64-windows/bin;${env:PATH}"
+                }
+            ],
+            "console": "integratedTerminal",
+            "preLaunchTask": "Build Debug"
+        },
+        {
+            "name": "Debug Current Sample",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/main.exe",
+            "args": ["${input:sampleNumber}"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal",
+            "preLaunchTask": "Build Debug",
+            "sourceFileMap": {
+                "/": "${workspaceFolder}/"
+            }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "sampleNumber",
+            "type": "pickString",
+            "description": "Select the sample to run",
+            "options": [
+                { "label": "1 - RAII", "value": "1" },
+                { "label": "2 - SFINAE", "value": "2" },
+                { "label": "3 - CRTP", "value": "3" },
+                { "label": "4 - PIMPL", "value": "4" },
+                { "label": "5 - Rule of Five", "value": "5" },
+                { "label": "6 - Type Erasure", "value": "6" },
+                { "label": "7 - Variant Visitor", "value": "7" },
+                { "label": "8 - Smart Pointers", "value": "8" },
+                { "label": "9 - Exception Safety", "value": "9" },
+                { "label": "10 - Move Semantics", "value": "10" },
+                { "label": "11 - Tag Dispatching", "value": "11" },
+                { "label": "12 - Deep/Shallow Copy", "value": "12" },
+                { "label": "13 - Copy and Swap Idiom", "value": "13" },
+                { "label": "14 - Cast Types", "value": "14" },
+                { "label": "15 - Thread Safety", "value": "15" }
+            ],
+            "default": "1"
+        },
+        {
+            "id": "testFilter",
+            "type": "pickString",
+            "description": "Select the test to run",
+            "options": [
+                { "label": "All Tests", "value": "*" },
+                { "label": "RAII", "value": "Samples.RAII" },
+                { "label": "SFINAE", "value": "Samples.SFINAE" },
+                { "label": "CRTP", "value": "Samples.CRTP" },
+                { "label": "PIMPL", "value": "Samples.PIMPL" },
+                { "label": "Rule of Five", "value": "Samples.RuleOfFive" },
+                { "label": "Type Erasure", "value": "Samples.TypeErasure" },
+                { "label": "Variant Visitor", "value": "Samples.VariantVisitor" },
+                { "label": "Smart Pointers", "value": "Samples.SmartPointers" },
+                { "label": "Exception Safety", "value": "Samples.ExceptionSafety" },
+                { "label": "Move Semantics", "value": "Samples.MoveSemantics" },
+                { "label": "Tag Dispatching", "value": "Samples.TagDispatching" },
+                { "label": "Deep/Shallow Copy", "value": "Samples.DeepShallowCopy" },
+                { "label": "Copy and Swap Idiom", "value": "Samples.CopyAndSwapIdiom" },
+                { "label": "Cast Types", "value": "Samples.Cast" },
+                { "label": "Thread Safety", "value": "Samples.ThreadSafety" }
+            ],
+            "default": "*"
+        }
+    ]
+}

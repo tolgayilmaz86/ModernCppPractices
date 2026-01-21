@@ -42,12 +42,30 @@ public:
 };
 
 void DeepShallowCopySample::demonstrate_shallow_copy() {
-    std::cout << "\n=== Shallow Copy Example ===\n";
-    ShallowCopyResource a(42);
-    ShallowCopyResource b = a; // shallow copy
-    std::cout << "a.data_ = " << a.data_ << ", b.data_ = " << b.data_ << "\n";
-    *b.data_ = 100;
-    std::cout << "After modifying b, a.data_ = " << *a.data_ << ", b.data_ = " << *b.data_ << "\n";
+    std::cout << "\n=== Shallow Copy Example (Conceptual) ===\n";
+    std::cout << "// Shallow copy with raw pointers causes double-free:\n";
+    std::cout << "// class ShallowCopyResource {\n";
+    std::cout << "//     int* data_;\n";
+    std::cout << "//     // Default copy constructor does shallow copy:\n";
+    std::cout << "//     // ShallowCopyResource(const ShallowCopyResource& other)\n";
+    std::cout << "//     //     : data_(other.data_) {}  // BOTH point to same memory!\n";
+    std::cout << "// };\n";
+    std::cout << "// ShallowCopyResource a(42);\n";
+    std::cout << "// ShallowCopyResource b = a;  // Shallow copy - same pointer!\n";
+    std::cout << "// When a and b are destroyed, the SAME memory is freed twice - CRASH!\n\n";
+    
+    // Safe demonstration without actual double-free
+    std::cout << "Safe demonstration of the concept:\n";
+    int* shared_data = new int(42);
+    int* ptr_a = shared_data;
+    int* ptr_b = shared_data;  // Both point to same memory
+    std::cout << "ptr_a points to: " << ptr_a << " (value: " << *ptr_a << ")\n";
+    std::cout << "ptr_b points to: " << ptr_b << " (value: " << *ptr_b << ")\n";
+    std::cout << "ptr_a == ptr_b: " << (ptr_a == ptr_b ? "true" : "false") << " (same address!)\n";
+    *ptr_b = 100;  // Modifying via ptr_b
+    std::cout << "After *ptr_b = 100: *ptr_a = " << *ptr_a << " (both see the change!)\n";
+    std::cout << "DANGER: If both tried to delete, we'd have double-free!\n";
+    delete shared_data;  // Only delete once to avoid crash
 }
 
 void DeepShallowCopySample::demonstrate_deep_copy() {

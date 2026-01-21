@@ -16,6 +16,7 @@
 #include "12_DeepShallowCopy/DeepShallowCopySample.hpp"
 #include "13_CopyAndSwapIdiom/CopyAndSwapIdiomSample.hpp"
 #include "14_Cast/CastSample.hpp"
+#include "15_ThreadSafety/ThreadSafetySample.hpp"
 
 int main(int argc, char* argv[]) {
     std::vector<std::unique_ptr<Testable>> samples;
@@ -33,6 +34,7 @@ int main(int argc, char* argv[]) {
     samples.push_back(std::make_unique<DeepShallowCopySample>());
     samples.push_back(std::make_unique<CopyAndSwapIdiomSample>());
     samples.push_back(std::make_unique<CastSample>());
+    samples.push_back(std::make_unique<ThreadSafetySample>());
 
     if (argc > 1) {
         try {
