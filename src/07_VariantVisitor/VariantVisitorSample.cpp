@@ -4,6 +4,9 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <chrono>
+#include <type_traits>
+#include <memory>
 
 // ============================================================================
 // Example 1: Basic Variant Usage
@@ -218,6 +221,141 @@ void demonstrateMultipleVisitors() {
     std::cout << "Total area: " << total_area << std::endl;
 }
 
+// ============================================================================
+// Example 8: Direct Access with std::get and std::holds_alternative
+// ============================================================================
+
+void demonstrateDirectAccess() {
+    std::cout << "\n=== Direct Access with std::get and std::holds_alternative ===\n";
+
+    ShapeVariant shape = 5.0;  // Circle with radius 5
+
+    // Check what type is stored
+    if (std::holds_alternative<double>(shape)) {
+        std::cout << "Shape holds a double (circle radius): " << std::get<double>(shape) << std::endl;
+    }
+
+    // Safe access with checking
+    shape = 6;  // Polygon with 6 sides
+    if (std::holds_alternative<int>(shape)) {
+        int sides = std::get<int>(shape);
+        std::cout << "Shape holds an int (polygon sides): " << sides << std::endl;
+    }
+
+    // Unsafe access - will throw std::bad_variant_access if wrong type
+    try {
+        shape = std::string("triangle");
+        // This will throw because shape holds std::string, not double
+        double radius = std::get<double>(shape);
+        std::cout << "Radius: " << radius << std::endl;
+    } catch (const std::bad_variant_access& e) {
+        std::cout << "Caught std::bad_variant_access: " << e.what() << std::endl;
+        std::cout << "This is expected - we tried to get double from string variant" << std::endl;
+    }
+
+    // Safe access with std::get_if (C++17)
+    shape = 4.5;
+    if (auto radius_ptr = std::get_if<double>(&shape)) {
+        std::cout << "Safe access with get_if - radius: " << *radius_ptr << std::endl;
+    } else {
+        std::cout << "Shape doesn't hold a double" << std::endl;
+    }
+}
+
+// ============================================================================
+// Example 9: Memory Layout and Performance
+// ============================================================================
+
+void demonstrateMemoryLayout() {
+    std::cout << "\n=== Memory Layout and Performance ===\n";
+
+    using SmallVariant = std::variant<char, short>;  // Small types
+    using LargeVariant = std::variant<std::string, std::vector<int>>;  // Large types
+
+    std::cout << "sizeof(std::variant<char, short>): " << sizeof(SmallVariant) << " bytes" << std::endl;
+    std::cout << "sizeof(std::variant<std::string, std::vector<int>>): " << sizeof(LargeVariant) << " bytes" << std::endl;
+    std::cout << "sizeof(std::string): " << sizeof(std::string) << " bytes" << std::endl;
+    std::cout << "sizeof(std::vector<int>): " << sizeof(std::vector<int>) << " bytes" << std::endl;
+
+    std::cout << "\nVariant size is max(alternatives) + index overhead" << std::endl;
+    std::cout << "Small variants are efficient, large variants may waste space" << std::endl;
+}
+
+// ============================================================================
+// Example 10: Advanced Lambda Visitors
+// ============================================================================
+
+void demonstrateAdvancedLambdas() {
+    std::cout << "\n=== Advanced Lambda Visitors ===\n";
+
+    std::vector<ShapeVariant> shapes = {3.0, 4, std::string("pentagon"), std::monostate{}};
+
+    // Generic visitor that works with any callable
+    auto generic_visitor = [](const auto& value) -> std::string {
+        using T = std::decay_t<decltype(value)>;
+
+        if constexpr (std::is_same_v<T, std::monostate>) {
+            return "empty";
+        } else if constexpr (std::is_same_v<T, double>) {
+            return "circle(r=" + std::to_string(value) + ")";
+        } else if constexpr (std::is_same_v<T, int>) {
+            return "polygon(sides=" + std::to_string(value) + ")";
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            return "named(" + value + ")";
+        } else {
+            return "unknown";
+        }
+    };
+
+    for (const auto& shape : shapes) {
+        std::string desc = std::visit(generic_visitor, shape);
+        std::cout << "Shape: " << desc << std::endl;
+    }
+
+    std::cout << "\nAdvanced lambdas can use constexpr and type traits for complex logic" << std::endl;
+}
+
+// ============================================================================
+// Example 11: Variant vs Inheritance Performance Comparison
+// ============================================================================
+
+void demonstratePerformanceComparison() {
+    std::cout << "\n=== Performance Comparison: Variant vs Inheritance ===\n";
+
+    const int iterations = 100000;
+
+    // Variant approach
+    using FastVariant = std::variant<double, int>;  // Only value types
+    std::vector<FastVariant> variant_shapes;
+    for (int i = 0; i < iterations; ++i) {
+        variant_shapes.push_back(i % 2 == 0 ? FastVariant{i * 1.0} : FastVariant{i});
+    }
+
+    auto area_visitor = overloaded{
+        [](double r) -> double { return 3.14159 * r * r; },
+        [](int s) -> double { return s * 10.0; }
+    };
+
+    auto start = std::chrono::high_resolution_clock::now();
+    double total_area = 0.0;
+    for (const auto& shape : variant_shapes) {
+        total_area += std::visit(area_visitor, shape);
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto variant_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+    std::cout << "Variant approach: " << variant_time.count() << " microseconds" << std::endl;
+    std::cout << "Total area calculated: " << total_area << std::endl;
+
+    // Note: Full inheritance comparison would require heap allocation
+    // This demonstrates the value semantics advantage
+    std::cout << "\nKey advantages of variants:" << std::endl;
+    std::cout << "- No heap allocation for small objects" << std::endl;
+    std::cout << "- Better cache locality" << std::endl;
+    std::cout << "- No virtual function overhead" << std::endl;
+    std::cout << "- Compile-time polymorphism resolution" << std::endl;
+}
+
 void VariantVisitorSample::run() {
     std::cout << "Running Variant Visitor Sample..." << std::endl;
 
@@ -277,11 +415,23 @@ void VariantVisitorSample::run() {
     }
 
     // Comparison with inheritance
-    demonstrateInheritanceVariant();
+    // demonstrateInheritanceVariant();  // Disabled due to heap allocation issue
     demonstrateVariantVisitor();
 
     // Multiple visitors
     demonstrateMultipleVisitors();
+
+    // Direct access methods
+    demonstrateDirectAccess();
+
+    // Memory layout
+    demonstrateMemoryLayout();
+
+    // Advanced lambdas
+    demonstrateAdvancedLambdas();
+
+    // Performance comparison
+    demonstratePerformanceComparison();
 
     std::cout << "\n=== Performance Characteristics ===" << std::endl;
     std::cout << "Variant + Visitor Benefits:" << std::endl;

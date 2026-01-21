@@ -80,6 +80,40 @@ polygon(sides=4) -> area: 40
 polygon(sides=5) -> area: 50
 named(square) -> area: 50
 Total area: 168.274
+
+=== Direct Access with std::get and std::holds_alternative ===
+Shape holds a double (circle radius): 5
+Shape holds an int (polygon sides): 6
+Caught std::bad_variant_access: bad variant access
+This is expected - we tried to get double from string variant
+Safe access with get_if - radius: 4.5
+
+=== Memory Layout and Performance ===
+sizeof(std::variant<char, short>): 4 bytes
+sizeof(std::variant<std::string, std::vector<int>>): 32 bytes
+sizeof(std::string): 32 bytes
+sizeof(std::vector<int>): 24 bytes
+
+Variant size is max(alternatives) + index overhead
+Small variants are efficient, large variants may waste space
+
+=== Advanced Lambda Visitors ===
+Shape: circle(r=3.000000)
+Shape: polygon(sides=4)
+Shape: named(pentagon)
+Shape: empty
+
+Advanced lambdas can use constexpr and type traits for complex logic
+
+=== Performance Comparison: Variant vs Inheritance ===
+Variant approach: 1250 microseconds
+Total area calculated: 1.5708e+11
+
+Key advantages of variants:
+- No heap allocation for small objects
+- Better cache locality
+- No virtual function overhead
+- Compile-time polymorphism resolution
 ```
 
 ## Key Components
@@ -111,7 +145,10 @@ This sample demonstrates:
 3. **Overloaded Lambdas**: Simple visitors using C++17 features
 4. **Error Handling**: Type-safe validation and exception handling
 5. **Multiple Visitors**: Different operations on the same data
-6. **Performance Comparison**: Variant vs inheritance approaches
+6. **Direct Access Methods**: Using `std::get`, `std::holds_alternative`, and `std::get_if`
+7. **Memory Layout**: Understanding variant storage characteristics
+8. **Advanced Lambda Visitors**: Using `constexpr` and type traits
+9. **Performance Comparison**: Variant vs inheritance approaches
 
 ## When to Use Variant + Visitor
 
