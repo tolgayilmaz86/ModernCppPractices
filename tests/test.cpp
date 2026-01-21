@@ -9,6 +9,7 @@
 #include "08_SmartPointers/SmartPointersSample.hpp"
 #include "09_ExceptionSafety/ExceptionSafetySample.hpp"
 #include "10_MoveSemantics/MoveSemanticsSample.hpp"
+#include "11_TagDispatching/TagDispatchingSample.hpp"
 
 TEST(Samples, RAII) {
     RAIISample sample;
@@ -68,6 +69,12 @@ TEST(Samples, ExceptionSafety) {
 TEST(Samples, MoveSemantics) {
     MoveSemanticsSample sample;
     // This will run the Move Semantics demonstration
+    sample.run();
+}
+
+TEST(Samples, TagDispatching) {
+    TagDispatchingSample sample;
+    // This will run the Tag Dispatching demonstration
     sample.run();
 }
 

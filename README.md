@@ -6,46 +6,16 @@ A comprehensive collection of Modern C++ practice examples demonstrating key idi
 
 ```
 ModernCppPractices/
-├── src/                          # Source code directory
+├── src/                         # Source code directory
 │   ├── Testable.hpp             # Abstract base class for samples
 │   ├── main.cpp                 # Main application entry point
-│   └── 01_RAII/                 # Resource Acquisition Is Initialization
+│   └── XX_SampleName/           # Resource Acquisition Is Initialization
 │       ├── README.md            # Detailed explanation
-│       ├── RAIISample.hpp       # Sample class header
-│       └── RAIISample.cpp       # Sample implementation
-│   └── 02_SFINAE/               # Substitution Failure Is Not An Error
-│       ├── README.md
-│       ├── SFINAESample.hpp
-│       └── SFINAESample.cpp
-│   └── 03_CRTP/                 # Curiously Recurring Template Pattern
-│       ├── README.md
-│       ├── CRTPSample.hpp
-│       └── CRTPSample.cpp
-│   └── 04_PIMPL/                 # Pointer to Implementation
-│       ├── README.md
-│       ├── PimplSample.hpp
-│       └── PimplSample.cpp
-│   └── 05_RuleOfFive/            # Rule of Five
-│       ├── README.md
-│       ├── RuleOfFiveSample.hpp
-│       └── RuleOfFiveSample.cpp
-│   └── 06_TypeErasure/          # Type Erasure
-│       ├── README.md
-│       ├── TypeErasureSample.hpp
-│       └── TypeErasureSample.cpp
-│   └── 07_VariantVisitor/       # Variant and Visitor Pattern
-│       ├── README.md
-│       ├── VariantVisitorSample.hpp
-│       └── VariantVisitorSample.cpp
-│   └── 08_SmartPointers/         # Smart Pointers
-│       ├── README.md
-│       ├── SmartPointersSample.hpp
-│       └── SmartPointersSample.cpp
-│   └── 09_ExceptionSafety/       # Exception Safety
-│       ├── README.md
-│       ├── ExceptionSafetySample.hpp
-│       └── ExceptionSafetySample.cpp
-│   └── [10]_*/                    # Additional practice examples
+│       ├── XXXXSample.hpp       # Sample class header
+│       └── XXXXSample.cpp       # Sample implementation
+.
+.
+.
 ├── tests/                       # Unit testing framework
 │   ├── CMakeLists.txt          # Test build configuration
 │   └── test.cpp                # Test suite implementation
@@ -101,6 +71,22 @@ Test Execution Flow:
 4. Output validation ensures samples execute correctly
 5. Test results reported with detailed diagnostics
 ```
+
+### Quick Reference: When to Use Each Idiom
+
+| Idiom | Use When |
+|-------|----------|
+| **RAII** | Managing ANY resource (memory, files, locks, connections) |
+| **SFINAE** | Pre-C++20 template constraints (prefer Concepts in C++20) |
+| **CRTP** | Static polymorphism, mixins, avoiding virtual overhead |
+| **Pimpl** | Reducing compile times, ABI stability, hiding dependencies |
+| **Copy-and-Swap** | Exception-safe assignment operators |
+| **Type Erasure** | Storing unrelated types uniformly, runtime flexibility |
+| **Tag Dispatch** | Compile-time algorithm selection based on type traits |
+| **Variant + Visitor** | Type-safe unions, fixed set of types, avoiding inheritance |
+| **Smart Pointers** | Automatic memory management, ownership semantics |
+| **Exception Safety** | Writing robust code with strong exception guarantees |
+| **Move Semantics** | Efficient resource transfer, avoiding unnecessary copies |
 
 ## 🚀 Building and Running
 
