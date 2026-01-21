@@ -87,6 +87,7 @@ Test Execution Flow:
 | **Smart Pointers** | Automatic memory management, ownership semantics |
 | **Exception Safety** | Writing robust code with strong exception guarantees |
 | **Move Semantics** | Efficient resource transfer, avoiding unnecessary copies |
+| **C++ Cast Types** | Safe type conversions, avoiding C-style casts |
 
 ## 🚀 Building and Running
 
@@ -174,6 +175,11 @@ ctest --test-dir build
 # 7: 07_VariantVisitor - Variant and Visitor Pattern
 # 8: 08_SmartPointers - Smart Pointers
 # 9: 09_ExceptionSafety - Exception Safety
+# 10: Move Semantics
+# 11: Tag Dispatching
+# 12: Deep vs Shallow Copy
+# 13: Copy and Swap Idiom
+# 14: C++ Cast Types
 ```
 
 #### Using Runner Scripts

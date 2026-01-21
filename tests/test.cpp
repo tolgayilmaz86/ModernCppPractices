@@ -12,6 +12,7 @@
 #include "11_TagDispatching/TagDispatchingSample.hpp"
 #include "12_DeepShallowCopy/DeepShallowCopySample.hpp"
 #include "13_CopyAndSwapIdiom/CopyAndSwapIdiomSample.hpp"
+#include "14_Cast/CastSample.hpp"
 
 TEST(Samples, RAII) {
     RAIISample sample;
@@ -89,6 +90,12 @@ TEST(Samples, DeepShallowCopy) {
 TEST(Samples, CopyAndSwapIdiom) {
     CopyAndSwapIdiomSample sample;
     // This will run the Copy and Swap Idiom demonstration
+    sample.run();
+}
+
+TEST(Samples, Cast) {
+    CastSample sample;
+    // This will run the Cast Types demonstration
     sample.run();
 }
 
