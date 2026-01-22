@@ -262,6 +262,8 @@ public:
     void setValue(int value) { *data_ = value; }
 };
 
+#include "SampleRegistry.hpp"
+
 void RuleOfFiveSample::run() {
     std::cout << "Running Rule of Five Sample..." << std::endl;
 
@@ -351,3 +353,6 @@ void RuleOfFiveSample::run() {
     std::cout << "- Move operations should leave source in valid but unspecified state" << std::endl;
     std::cout << "- Violating the rule leads to resource leaks, double deletion, or crashes" << std::endl;
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(RuleOfFiveSample, "Rule of Five", 5);

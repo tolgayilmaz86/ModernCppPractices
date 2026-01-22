@@ -1,4 +1,5 @@
 #include "RAIISample.hpp"
+#include "SampleRegistry.hpp"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -82,3 +83,6 @@ void RAIISample::run() {
 
     std::cout << "File operations completed. File is now closed." << std::endl;
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(RAIISample, "RAII", 1);

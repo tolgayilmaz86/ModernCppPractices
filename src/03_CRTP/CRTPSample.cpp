@@ -115,6 +115,8 @@ public:
     int getValue() const { return value; }
 };
 
+#include "SampleRegistry.hpp"
+
 void CRTPSample::run() {
     std::cout << "Running CRTP Sample..." << std::endl;
 
@@ -158,3 +160,6 @@ void CRTPSample::run() {
 
     std::cout << "\nCRTP demonstration completed!" << std::endl;
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(CRTPSample, "CRTP", 3);

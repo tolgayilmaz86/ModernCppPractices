@@ -90,6 +90,8 @@ void TagDispatchingSample::demonstrate_best_practices() {
     compute_dispatch(100, false);
 }
 
+#include "SampleRegistry.hpp"
+
 void TagDispatchingSample::run() {
     std::cout << "Running Tag Dispatching Sample...\n";
     demonstrate_tag_dispatching();
@@ -97,3 +99,6 @@ void TagDispatchingSample::run() {
     demonstrate_best_practices();
     std::cout << "\nTag dispatching demonstration completed!\n";
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(TagDispatchingSample, "Tag Dispatching", 11);

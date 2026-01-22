@@ -102,6 +102,8 @@ void CopyAndSwapIdiomSample::demonstrate_best_practices() {
     std::cout << "- Consider using std::swap for standard types\n";
 }
 
+#include "SampleRegistry.hpp"
+
 void CopyAndSwapIdiomSample::run() {
     std::cout << "Running Copy and Swap Idiom Sample...\n";
     demonstrate_copy_and_swap();
@@ -109,3 +111,6 @@ void CopyAndSwapIdiomSample::run() {
     demonstrate_best_practices();
     std::cout << "\nCopy and Swap Idiom demonstration completed!\n";
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(CopyAndSwapIdiomSample, "Copy and Swap Idiom", 13);

@@ -163,6 +163,8 @@ public:
     int getCounter() const { return pimpl_->getCounter(); }
 };
 
+#include "SampleRegistry.hpp"
+
 void PimplSample::run() {
     std::cout << "Running Pimpl Sample..." << std::endl;
 
@@ -227,3 +229,6 @@ void PimplSample::run() {
     std::cout << "- Binary compatibility (ABI stability)" << std::endl;
     std::cout << "- Implementation can change without affecting clients" << std::endl;
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(PimplSample, "Pimpl", 4);

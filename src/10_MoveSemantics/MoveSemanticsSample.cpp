@@ -293,6 +293,8 @@ void MoveSemanticsSample::demonstrate_move_semantics_best_practices() {
     std::cout << "Moved-from objects should be in valid but unspecified state" << std::endl;
 }
 
+#include "SampleRegistry.hpp"
+
 void MoveSemanticsSample::run() {
     std::cout << "Running Move Semantics Sample..." << std::endl;
 
@@ -316,3 +318,6 @@ void MoveSemanticsSample::run() {
 
     std::cout << "\nMove semantics demonstration completed!" << std::endl;
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(MoveSemanticsSample, "Move Semantics", 10);

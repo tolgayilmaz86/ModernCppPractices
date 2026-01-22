@@ -172,6 +172,8 @@ void CastSample::demonstrate_best_practices() {
     delete base_ptr;
 }
 
+#include "SampleRegistry.hpp"
+
 void CastSample::run() {
     std::cout << "Running C++ Cast Types Sample...\n";
 
@@ -193,3 +195,6 @@ void CastSample::run() {
 
     std::cout << "\nC++ Cast Types demonstration completed!\n";
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(CastSample, "C++ Cast Types", 14);

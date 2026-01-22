@@ -355,6 +355,8 @@ void demonstratePerformance() {
     std::cout << "Performance demonstration completed" << std::endl;
 }
 
+#include "SampleRegistry.hpp"
+
 void SmartPointersSample::run() {
     std::cout << "Running Smart Pointers Sample..." << std::endl;
 
@@ -400,3 +402,6 @@ void SmartPointersSample::run() {
 
     std::cout << "\nSmart pointers demonstration completed!" << std::endl;
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(SmartPointersSample, "Smart Pointers", 8);

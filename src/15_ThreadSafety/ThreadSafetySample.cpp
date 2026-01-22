@@ -111,6 +111,8 @@ public:
 // Implementation
 // ============================================================================
 
+#include "SampleRegistry.hpp"
+
 void ThreadSafetySample::run() {
     std::cout << "Running Thread Safety Sample..." << std::endl;
 
@@ -429,3 +431,6 @@ void ThreadSafetySample::demonstrate_thread_safety_best_practices() {
     std::cout << "- Use a global lock ordering" << std::endl;
     std::cout << "- Consider lock levels or addresses" << std::endl;
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(ThreadSafetySample, "Thread Safety", 15);

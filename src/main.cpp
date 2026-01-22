@@ -2,6 +2,10 @@
 #include <vector>
 #include <memory>
 #include "Testable.hpp"
+#include "SampleRegistry.hpp"
+
+// Include all sample headers to ensure static registration occurs
+// (Without these includes, the object files may not be linked)
 #include "01_RAII/RAIISample.hpp"
 #include "02_SFINAE/SFINAESample.hpp"
 #include "03_CRTP/CRTPSample.hpp"
@@ -17,24 +21,12 @@
 #include "13_CopyAndSwapIdiom/CopyAndSwapIdiomSample.hpp"
 #include "14_Cast/CastSample.hpp"
 #include "15_ThreadSafety/ThreadSafetySample.hpp"
+#include "16_Concepts/ConceptsSample.hpp"
+#include "17_Coroutines/CoroutinesSample.hpp"
 
 int main(int argc, char* argv[]) {
-    std::vector<std::unique_ptr<Testable>> samples;
-    samples.push_back(std::make_unique<RAIISample>());
-    samples.push_back(std::make_unique<SFINAESample>());
-    samples.push_back(std::make_unique<CRTPSample>());
-    samples.push_back(std::make_unique<PimplSample>());
-    samples.push_back(std::make_unique<RuleOfFiveSample>());
-    samples.push_back(std::make_unique<TypeErasureSample>());
-    samples.push_back(std::make_unique<VariantVisitorSample>());
-    samples.push_back(std::make_unique<SmartPointersSample>());
-    samples.push_back(std::make_unique<ExceptionSafetySample>());
-    samples.push_back(std::make_unique<MoveSemanticsSample>());
-    samples.push_back(std::make_unique<TagDispatchingSample>());
-    samples.push_back(std::make_unique<DeepShallowCopySample>());
-    samples.push_back(std::make_unique<CopyAndSwapIdiomSample>());
-    samples.push_back(std::make_unique<CastSample>());
-    samples.push_back(std::make_unique<ThreadSafetySample>());
+    auto& registry = SampleRegistry::instance();
+    auto samples = registry.createAll();
 
     if (argc > 1) {
         try {

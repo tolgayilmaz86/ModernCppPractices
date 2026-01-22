@@ -644,6 +644,8 @@ void demonstrate_std_expected() {
     std::cout << "- Clear intent: success/failure is explicit" << std::endl;
 }
 
+#include "SampleRegistry.hpp"
+
 void ExceptionSafetySample::run() {
     std::cout << "Running Exception Safety Sample..." << std::endl;
 
@@ -686,3 +688,6 @@ void ExceptionSafetySample::run() {
 
     std::cout << "\nException safety demonstration completed!" << std::endl;
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(ExceptionSafetySample, "Exception Safety", 9);

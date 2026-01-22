@@ -92,6 +92,8 @@ void DeepShallowCopySample::demonstrate_best_practices() {
     std::cout << "- Use =delete to prevent copying if not supported.\n";
 }
 
+#include "SampleRegistry.hpp"
+
 void DeepShallowCopySample::run() {
     std::cout << "Running Deep vs Shallow Copy Sample...\n";
     demonstrate_shallow_copy();
@@ -100,3 +102,6 @@ void DeepShallowCopySample::run() {
     demonstrate_best_practices();
     std::cout << "\nDeep vs Shallow Copy demonstration completed!\n";
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(DeepShallowCopySample, "Deep vs Shallow Copy", 12);

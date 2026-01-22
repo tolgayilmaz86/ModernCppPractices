@@ -356,6 +356,8 @@ void demonstratePerformanceComparison() {
     std::cout << "- Compile-time polymorphism resolution" << std::endl;
 }
 
+#include "SampleRegistry.hpp"
+
 void VariantVisitorSample::run() {
     std::cout << "Running Variant Visitor Sample..." << std::endl;
 
@@ -455,3 +457,6 @@ void VariantVisitorSample::run() {
 
     std::cout << "\nVariant visitor demonstration completed!" << std::endl;
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(VariantVisitorSample, "Variant Visitor", 7);

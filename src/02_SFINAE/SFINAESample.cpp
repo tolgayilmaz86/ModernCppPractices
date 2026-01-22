@@ -1,4 +1,5 @@
 #include "SFINAESample.hpp"
+#include "SampleRegistry.hpp"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -22,6 +23,7 @@ private:
     static std::false_type test(...);
 
 public:
+    // Extract the boolean result from the SFINAE test for T
     static constexpr bool value = decltype(test<T>(0))::value;
 };
 
@@ -166,3 +168,6 @@ void SFINAESample::run() {
     std::cout << "Running SFINAE Sample..." << std::endl;
     demonstrateSFINAE();
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(SFINAESample, "SFINAE", 2);

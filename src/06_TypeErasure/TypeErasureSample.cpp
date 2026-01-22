@@ -263,6 +263,8 @@ void demonstrateTypeErasure() {
     std::cout << "Advantage: No inheritance requirement, any type works!" << std::endl;
 }
 
+#include "SampleRegistry.hpp"
+
 void TypeErasureSample::run() {
     std::cout << "Running Type Erasure Sample..." << std::endl;
 
@@ -332,3 +334,6 @@ void TypeErasureSample::run() {
 
     std::cout << "\nType erasure demonstration completed!" << std::endl;
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(TypeErasureSample, "Type Erasure", 6);

@@ -202,74 +202,72 @@ run.bat 02                 # Windows batch script
 
 #### Adding a New Sample
 
+This project uses an **auto-registration system** that makes adding new samples simple. Follow these steps:
+
 1. **Create Directory Structure**
    ```bash
-   mkdir src/03_CRTP
+   mkdir src/17_NewTopic
    ```
 
-2. **Implement Sample Class**
+2. **Implement Sample Header**
    ```cpp
-   // src/03_CRTP/CRTPSample.hpp
+   // src/17_NewTopic/NewTopicSample.hpp
    #pragma once
    #include "Testable.hpp"
 
-   class CRTPSample : public Testable {
+   class NewTopicSample : public Testable {
    public:
        void run() override;
        std::string name() const override {
-           return "03_CRTP - Curiously Recurring Template Pattern";
+           return "17_NewTopic - Your Topic Description";
        }
    };
    ```
 
-3. **Add Implementation**
+3. **Add Implementation with Auto-Registration**
    ```cpp
-   // src/03_CRTP/CRTPSample.cpp
-   #include "CRTPSample.hpp"
+   // src/17_NewTopic/NewTopicSample.cpp
+   #include "NewTopicSample.hpp"
    #include <iostream>
 
-   void CRTPSample::run() {
-       std::cout << "CRTP demonstration..." << std::endl;
+   void NewTopicSample::run() {
+       std::cout << "Running New Topic Sample..." << std::endl;
+       // Your demonstration code here
    }
+
+   // Auto-register this sample (add at end of file)
+   #include "SampleRegistry.hpp"
+   REGISTER_SAMPLE(NewTopicSample, "New Topic", 17);
    ```
 
-4. **Update Main Application**
+4. **Include Header in main.cpp** (for linking)
    ```cpp
-   // src/main.cpp
-   #include "03_CRTP/CRTPSample.hpp"
-   // Add to samples vector
-   samples.push_back(std::make_unique<CRTPSample>());
+   // src/main.cpp - add with other includes
+   #include "17_NewTopic/NewTopicSample.hpp"
    ```
 
 5. **Add Tests**
    ```cpp
    // tests/test.cpp
-   #include "03_CRTP/CRTPSample.hpp"
-   TEST(Samples, CRTP) {
-       CRTPSample sample;
+   #include "17_NewTopic/NewTopicSample.hpp"
+   TEST(Samples, NewTopic) {
+       NewTopicSample sample;
        sample.run();
    }
    ```
 
-6. **Update Build System**
+6. **Update tests/CMakeLists.txt**
    ```cmake
-   # tests/CMakeLists.txt
+   # Add the new .cpp file to the unit_tests executable
    add_executable(unit_tests test.cpp
-       ../src/01_RAII/RAIISample.cpp
-       ../src/02_SFINAE/SFINAESample.cpp
-       ../src/03_CRTP/CRTPSample.cpp
-       ../src/04_PIMPL/PimplSample.cpp
-       ../src/05_RuleOfFive/RuleOfFiveSample.cpp
-       ../src/06_TypeErasure/TypeErasureSample.cpp
-       ../src/07_VariantVisitor/VariantVisitorSample.cpp
-       ../src/08_SmartPointers/SmartPointersSample.cpp
-       ../src/09_ExceptionSafety/ExceptionSafetySample.cpp)  # Add new sample
+       ...existing files...
+       ../src/17_NewTopic/NewTopicSample.cpp)
    ```
 
-7. **Update Documentation**
-   - Add to main README.md
-   - Create detailed README.md in sample directory
-   - Update runner scripts if needed
+7. **Create Documentation**
+   - Add `src/17_NewTopic/README.md` with detailed explanation
+
+**That's it!** The `REGISTER_SAMPLE` macro automatically registers your sample with the runner system. The number (17) controls the display order.
 
 ### Build System Details
 

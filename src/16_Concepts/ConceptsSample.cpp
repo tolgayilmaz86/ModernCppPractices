@@ -419,6 +419,8 @@ void demonstrate_error_messages() {
 // Main Run Function
 // ============================================================================
 
+#include "SampleRegistry.hpp"
+
 void ConceptsSample::run() {
     std::cout << "Running C++20 Concepts Sample..." << std::endl;
     std::cout << "=================================" << std::endl;
@@ -444,3 +446,6 @@ void ConceptsSample::run() {
 
     std::cout << "\nC++20 Concepts demonstration completed!" << std::endl;
 }
+
+// Auto-register this sample
+REGISTER_SAMPLE(ConceptsSample, "C++20 Concepts", 16);

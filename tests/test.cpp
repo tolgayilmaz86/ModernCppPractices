@@ -15,6 +15,7 @@
 #include "14_Cast/CastSample.hpp"
 #include "15_ThreadSafety/ThreadSafetySample.hpp"
 #include "16_Concepts/ConceptsSample.hpp"
+#include "17_Coroutines/CoroutinesSample.hpp"
 
 TEST(Samples, RAII) {
     RAIISample sample;
@@ -110,6 +111,12 @@ TEST(Samples, ThreadSafety) {
 TEST(Samples, Concepts) {
     ConceptsSample sample;
     // This will run the C++20 Concepts demonstration
+    sample.run();
+}
+
+TEST(Samples, Coroutines) {
+    CoroutinesSample sample;
+    // This will run the C++20 Coroutines demonstration
     sample.run();
 }
 
