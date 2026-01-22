@@ -430,6 +430,7 @@ void demonstrate_tasks() {
 void demonstrate_awaitables() {
     std::cout << "\n=== Custom Awaitables ===" << std::endl;
     auto task = demonstrate_awaitable();
+    task.get();  // Wait for the task to complete
     std::cout << "Task completed" << std::endl;
 }
 

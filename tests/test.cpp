@@ -16,6 +16,11 @@
 #include "15_ThreadSafety/ThreadSafetySample.hpp"
 #include "16_Concepts/ConceptsSample.hpp"
 #include "17_Coroutines/CoroutinesSample.hpp"
+#include "18_SRP/SRPSample.hpp"
+#include "19_OCP/OCPSample.hpp"
+#include "20_LSP/LSPSample.hpp"
+#include "21_ISP/ISPSample.hpp"
+#include "22_DIP/DIPSample.hpp"
 
 TEST(Samples, RAII) {
     RAIISample sample;
@@ -119,6 +124,36 @@ TEST(Samples, Coroutines) {
     // This will run the C++20 Coroutines demonstration
     sample.run();
 }
+
+// TEST(SOLID, SingleResponsibilityPrinciple) {
+//     SRPSample sample;
+//     // This will run the Single Responsibility Principle demonstration
+//     sample.run();
+// }
+
+// TEST(SOLID, OpenClosedPrinciple) {
+//     OCPSample sample;
+//     // This will run the Open/Closed Principle demonstration
+//     sample.run();
+// }
+
+// TEST(SOLID, LiskovSubstitutionPrinciple) {
+//     LSPSample sample;
+//     // This will run the Liskov Substitution Principle demonstration
+//     sample.run();
+// }
+
+// TEST(SOLID, InterfaceSegregationPrinciple) {
+//     ISPSample sample;
+//     // This will run the Interface Segregation Principle demonstration
+//     sample.run();
+// }
+
+// TEST(SOLID, DependencyInversionPrinciple) {
+//     DIPSample sample;
+//     // This will run the Dependency Inversion Principle demonstration
+//     sample.run();
+// }
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

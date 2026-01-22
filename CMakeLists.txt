@@ -22,11 +22,17 @@ file(GLOB_RECURSE SOURCES src/*.cpp)
 
 add_executable(main ${SOURCES})
 
-# Enable strict compile warnings
+# Enable strict compile warnings and debug info
 target_compile_options(main PRIVATE
-    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /FS>
+    $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/W4 /permissive- /FS /Zi /Od>
+    $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<NOT:$<CONFIG:Debug>>>:/W4 /permissive- /FS>
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wconversion -Wshadow>
 )
+
+# Ensure PDB files are generated for MSVC
+if(MSVC)
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG:FULL")
+endif()
 
 # Add tests subdirectory (GTest is found there)
 add_subdirectory(tests)

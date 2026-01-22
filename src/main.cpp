@@ -23,6 +23,11 @@
 #include "15_ThreadSafety/ThreadSafetySample.hpp"
 #include "16_Concepts/ConceptsSample.hpp"
 #include "17_Coroutines/CoroutinesSample.hpp"
+#include "18_SRP/SRPSample.hpp"
+#include "19_OCP/OCPSample.hpp"
+#include "20_LSP/LSPSample.hpp"
+#include "21_ISP/ISPSample.hpp"
+#include "22_DIP/DIPSample.hpp"
 
 int main(int argc, char* argv[]) {
     auto& registry = SampleRegistry::instance();
