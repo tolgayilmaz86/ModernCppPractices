@@ -45,6 +45,7 @@ public:
 // ============================================================================
 
 // Helper for creating overloaded lambdas
+// overloaded keyword helps to combine multiple lambdas into one
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 

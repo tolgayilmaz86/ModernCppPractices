@@ -44,6 +44,12 @@ public:
 
     void operation() { pimpl_->operation(); }
 };
+
+// Usage
+Wrapper w1 = SomeType{};
+w1.operation();
+Wrapper w2 = AnotherType{};
+w2.operation();
 ```
 
 ### Other examples of Type Erasure

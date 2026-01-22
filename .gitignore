@@ -17,6 +17,11 @@ buildtrees/
 *.lo
 *.o
 *.obj
+*.pidb
+*.pdb
+*.idb
+*.class
+*.ilk
 
 # Precompiled Headers
 *.gch
