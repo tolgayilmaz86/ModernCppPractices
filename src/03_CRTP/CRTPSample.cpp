@@ -80,6 +80,8 @@ public:
 
 private:
     Circle* doClone() const override {
+        // Even though circle doesn't have copy constructor explicitly defined, 
+        // this works because the compiler generates a default copy constructor.
         return new Circle(*this);
     }
 };

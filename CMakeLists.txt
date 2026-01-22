@@ -24,7 +24,7 @@ add_executable(main ${SOURCES})
 
 # Enable strict compile warnings
 target_compile_options(main PRIVATE
-    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive->
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /FS>
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wconversion -Wshadow>
 )
 

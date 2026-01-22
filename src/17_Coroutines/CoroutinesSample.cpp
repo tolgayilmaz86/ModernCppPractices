@@ -1,6 +1,7 @@
 #include "CoroutinesSample.hpp"
 #include <iostream>
 #include <coroutine>
+#include <exception>
 #include <optional>
 #include <vector>
 #include <string>

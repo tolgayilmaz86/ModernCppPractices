@@ -16,11 +16,13 @@
 template <typename T>
 class has_begin {
 private:
+    // Compiler interprets this as "if U has begin(), this overload is chosen"
+    // decltype is used to check for the existence of begin() and true_type is returned
     template <typename U>
     static auto test(int) -> decltype(std::declval<U>().begin(), std::true_type());
 
     template <typename>
-    static std::false_type test(...);
+    static std::false_type test(...); // Fallback
 
 public:
     // Extract the boolean result from the SFINAE test for T
@@ -28,9 +30,10 @@ public:
 };
 
 // Traditional SFINAE: Function that works only for containers
+// Compilers read it as "enable this function if class T has begin()"
 template <typename T>
-typename std::enable_if<has_begin<T>::value, void>::type
-print_container_sfinAE(const T& container) {
+typename std::enable_if<has_begin<T>::value, void>::type // void represents return type
+print_container_enable_if(const T& container) {
     std::cout << "[SFINAE] Container contents: ";
     for (const auto& item : container) {
         std::cout << item << " ";
@@ -40,8 +43,8 @@ print_container_sfinAE(const T& container) {
 
 // Traditional SFINAE: Function that works only for non-containers
 template <typename T>
-typename std::enable_if<!has_begin<T>::value, void>::type
-print_container_sfinAE(const T& value) {
+typename std::enable_if<!has_begin<T>::value, void>::type // void represents return type
+print_container_enable_if(const T& value) {
     std::cout << "[SFINAE] Single value: " << value << std::endl;
 }
 
@@ -86,6 +89,7 @@ void print_container_concepts(const Container auto& container) {
     std::cout << std::endl;
 }
 
+// auto parameter can be constrained by concepts
 void print_container_concepts(const auto& value) {
     std::cout << "[Concepts] Single value: " << value << std::endl;
 }
@@ -96,10 +100,13 @@ auto double_value_concepts(const Arithmetic auto& value) {
     return value * 2;
 }
 
+// Overload for non-arithmetic types
 auto double_value_concepts(const auto& value) {
     std::cout << "[Concepts] Converting to string: " << value << " -> \"" << value << value << "\"" << std::endl;
     return std::string(value) + std::string(value);
 }
+
+// ============================================================================
 
 // Traditional SFINAE arithmetic functions (for comparison)
 template <typename T>
@@ -129,9 +136,9 @@ void demonstrateSFINAE() {
 
     // Demonstrate all three approaches with the same data
     std::cout << "1. Traditional SFINAE with std::enable_if:" << std::endl;
-    print_container_sfinAE(vec);
-    print_container_sfinAE(single_value);
-    print_container_sfinAE(str);
+    print_container_enable_if(vec);
+    print_container_enable_if(single_value);
+    print_container_enable_if(str);
 
     std::cout << "\n2. C++17 if constexpr:" << std::endl;
     print_container_constexpr(vec);
