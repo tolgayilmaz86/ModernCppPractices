@@ -3,6 +3,9 @@
 #include "GoodExample.hpp"
 #include <iostream>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+namespace {
+
 void demonstrate_bad_srp() {
     std::cout << "\n=== BAD: Class with Multiple Responsibilities ===" << std::endl;
     std::cout << "The User class handles: data, validation, persistence, email, logging\n" << std::endl;
@@ -89,6 +92,8 @@ void demonstrate_srp_benefits() {
     std::cout << "     - Each class has a clear purpose" << std::endl;
     std::cout << "     - Easier to understand and navigate" << std::endl;
 }
+
+} // end anonymous namespace
 
 #include "SampleRegistry.hpp"
 

@@ -5,6 +5,9 @@
 #include <fstream>
 #include <vector>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+namespace {
+
 // Example 1: Class managing heap memory (C-style)
 class HeapResource {
 private:
@@ -261,6 +264,8 @@ public:
     int getValue() const { return *data_; }
     void setValue(int value) { *data_ = value; }
 };
+
+} // end anonymous namespace
 
 #include "SampleRegistry.hpp"
 

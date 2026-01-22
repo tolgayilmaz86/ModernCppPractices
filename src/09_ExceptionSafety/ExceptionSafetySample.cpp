@@ -8,6 +8,9 @@
 #include <algorithm>
 #include <expected>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+namespace {
+
 // ============================================================================
 // Example Classes for Demonstration
 // ============================================================================
@@ -643,6 +646,8 @@ void demonstrate_std_expected() {
     std::cout << "- Type-safe error handling" << std::endl;
     std::cout << "- Clear intent: success/failure is explicit" << std::endl;
 }
+
+} // end anonymous namespace
 
 #include "SampleRegistry.hpp"
 

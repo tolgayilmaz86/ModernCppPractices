@@ -3,6 +3,10 @@
 #include <memory>
 #include <vector>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+// with similarly named classes in other translation units
+namespace {
+
 // CRTP Counter Mixin - tracks number of instances
 template <typename T>
 class Counter {
@@ -116,6 +120,8 @@ public:
 
     int getValue() const { return value; }
 };
+
+} // end anonymous namespace
 
 #include "SampleRegistry.hpp"
 

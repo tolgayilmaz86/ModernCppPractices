@@ -14,7 +14,7 @@ project(ModernCppPractices LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+# Use dynamic runtime (default) to match vcpkg x64-windows triplet
 
 include_directories(src)
 

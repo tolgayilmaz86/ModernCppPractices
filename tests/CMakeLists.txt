@@ -36,6 +36,7 @@ target_compile_options(unit_tests PRIVATE
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wconversion -Wshadow>
 )
 
-target_link_libraries(unit_tests GTest::gtest GTest::gtest_main)
+# Only link gtest, not gtest_main since we define our own main()
+target_link_libraries(unit_tests GTest::gtest)
 
 add_test(NAME unit_tests COMMAND unit_tests)

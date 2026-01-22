@@ -5,6 +5,9 @@
 #include <memory>
 #include <vector>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+namespace {
+
 void demonstrate_bad_ocp() {
     std::cout << "\n=== BAD: Must Modify Code to Add Features ===" << std::endl;
     std::cout << "Adding a new shape requires changing AreaCalculator\n" << std::endl;
@@ -93,6 +96,8 @@ void demonstrate_ocp_benefits() {
     std::cout << "     - New classes need new tests only" << std::endl;
     std::cout << "     - Existing tests remain valid" << std::endl;
 }
+
+} // end anonymous namespace
 
 #include "SampleRegistry.hpp"
 

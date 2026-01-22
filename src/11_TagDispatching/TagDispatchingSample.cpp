@@ -4,6 +4,9 @@
 #include <vector>
 #include <string>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+namespace {
+
 // Tag types for dispatching
 struct input_iterator_tag {};
 struct random_access_iterator_tag : input_iterator_tag {};
@@ -57,6 +60,8 @@ void compute_dispatch(T value, bool fast) {
         compute(value, slow_tag{});
     }
 }
+
+} // end anonymous namespace
 
 void TagDispatchingSample::demonstrate_tag_dispatching() {
     std::cout << "\n=== Tag Dispatching: Iterator Advance Example ===\n";

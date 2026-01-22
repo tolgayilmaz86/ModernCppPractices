@@ -5,6 +5,9 @@
 #include <memory>
 #include <vector>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+namespace {
+
 void demonstrate_bad_rectangle_square() {
     std::cout << "\n=== BAD: Rectangle/Square Violation ===" << std::endl;
     std::cout << "Square inherits from Rectangle but breaks its contract\n" << std::endl;
@@ -120,6 +123,8 @@ void demonstrate_lsp_rules() {
     std::cout << "     - Use interfaces to separate capabilities" << std::endl;
     std::cout << "     - Prefer composition over inheritance" << std::endl;
 }
+
+} // end anonymous namespace
 
 #include "SampleRegistry.hpp"
 

@@ -4,6 +4,9 @@
 #include <iostream>
 #include <memory>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+namespace {
+
 void demonstrate_bad_worker() {
     std::cout << "\n=== BAD: Fat Worker Interface ===" << std::endl;
     std::cout << "Classes forced to implement irrelevant methods\n" << std::endl;
@@ -131,6 +134,8 @@ void demonstrate_isp_benefits() {
     std::cout << "     - Changes to one interface don't affect others" << std::endl;
     std::cout << "     - Clients depend only on what they use" << std::endl;
 }
+
+} // end anonymous namespace
 
 #include "SampleRegistry.hpp"
 

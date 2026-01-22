@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+namespace {
+
 // Forward declaration of the implementation class
 class PimplWidgetImpl;
 
@@ -162,6 +165,8 @@ public:
     void increment() { pimpl_->increment(); }
     int getCounter() const { return pimpl_->getCounter(); }
 };
+
+} // end anonymous namespace
 
 #include "SampleRegistry.hpp"
 

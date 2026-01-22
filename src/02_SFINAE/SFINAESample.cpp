@@ -6,6 +6,9 @@
 #include <type_traits>
 #include <concepts>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+namespace {
+
 // SFINAE Example: Different approaches to conditional compilation
 
 // ============================================================================
@@ -170,6 +173,8 @@ void demonstrateSFINAE() {
     std::cout << "Concepts: Clear, readable constraints with better error messages" << std::endl;
     std::cout << "\nAll approaches achieve the same result but with different trade-offs!" << std::endl;
 }
+
+} // end anonymous namespace
 
 void SFINAESample::run() {
     std::cout << "Running SFINAE Sample..." << std::endl;

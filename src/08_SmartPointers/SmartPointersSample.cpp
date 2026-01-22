@@ -5,6 +5,9 @@
 #include <string>
 #include <functional>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+namespace {
+
 // ============================================================================
 // Example Classes for Demonstration
 // ============================================================================
@@ -354,6 +357,8 @@ void demonstratePerformance() {
 
     std::cout << "Performance demonstration completed" << std::endl;
 }
+
+} // end anonymous namespace
 
 #include "SampleRegistry.hpp"
 

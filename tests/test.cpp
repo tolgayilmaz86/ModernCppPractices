@@ -125,35 +125,35 @@ TEST(Samples, Coroutines) {
     sample.run();
 }
 
-// TEST(SOLID, SingleResponsibilityPrinciple) {
-//     SRPSample sample;
-//     // This will run the Single Responsibility Principle demonstration
-//     sample.run();
-// }
+TEST(SOLID, SingleResponsibilityPrinciple) {
+    SRPSample sample;
+    // This will run the Single Responsibility Principle demonstration
+    sample.run();
+}
 
-// TEST(SOLID, OpenClosedPrinciple) {
-//     OCPSample sample;
-//     // This will run the Open/Closed Principle demonstration
-//     sample.run();
-// }
+TEST(SOLID, OpenClosedPrinciple) {
+    OCPSample sample;
+    // This will run the Open/Closed Principle demonstration
+    sample.run();
+}
 
-// TEST(SOLID, LiskovSubstitutionPrinciple) {
-//     LSPSample sample;
-//     // This will run the Liskov Substitution Principle demonstration
-//     sample.run();
-// }
+TEST(SOLID, LiskovSubstitutionPrinciple) {
+    LSPSample sample;
+    // This will run the Liskov Substitution Principle demonstration
+    sample.run();
+}
 
-// TEST(SOLID, InterfaceSegregationPrinciple) {
-//     ISPSample sample;
-//     // This will run the Interface Segregation Principle demonstration
-//     sample.run();
-// }
+TEST(SOLID, InterfaceSegregationPrinciple) {
+    ISPSample sample;
+    // This will run the Interface Segregation Principle demonstration
+    sample.run();
+}
 
-// TEST(SOLID, DependencyInversionPrinciple) {
-//     DIPSample sample;
-//     // This will run the Dependency Inversion Principle demonstration
-//     sample.run();
-// }
+TEST(SOLID, DependencyInversionPrinciple) {
+    DIPSample sample;
+    // This will run the Dependency Inversion Principle demonstration
+    sample.run();
+}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

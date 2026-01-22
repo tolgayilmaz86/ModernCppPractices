@@ -10,6 +10,9 @@
 #include <iterator>
 #include <algorithm>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+namespace {
+
 // ============================================================================
 // C++20 Concepts: A Modern Alternative to SFINAE
 // ============================================================================
@@ -414,6 +417,8 @@ void demonstrate_error_messages() {
     std::cout << std::endl;
     std::cout << "Concepts tell you WHAT constraint failed, not just THAT it failed!" << std::endl;
 }
+
+} // end anonymous namespace
 
 // ============================================================================
 // Main Run Function

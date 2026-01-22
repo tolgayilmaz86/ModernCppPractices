@@ -4,6 +4,9 @@
 #include <fstream>
 #include <string>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+namespace {
+
 // RAII File Wrapper Example
 class File {
 private:
@@ -65,6 +68,8 @@ public:
         return fileStream.is_open();
     }
 };
+
+} // end anonymous namespace
 
 void RAIISample::run() {
     std::cout << "Running RAII Sample..." << std::endl;

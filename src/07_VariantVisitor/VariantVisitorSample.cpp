@@ -8,6 +8,10 @@
 #include <type_traits>
 #include <memory>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+// with similarly named classes in other translation units
+namespace {
+
 // ============================================================================
 // Example 1: Basic Variant Usage
 // ============================================================================
@@ -356,6 +360,8 @@ void demonstratePerformanceComparison() {
     std::cout << "- No virtual function overhead" << std::endl;
     std::cout << "- Compile-time polymorphism resolution" << std::endl;
 }
+
+} // end anonymous namespace
 
 #include "SampleRegistry.hpp"
 

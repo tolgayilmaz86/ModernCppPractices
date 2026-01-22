@@ -4,6 +4,9 @@
 #include <iostream>
 #include <memory>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+namespace {
+
 void demonstrate_bad_dip() {
     std::cout << "\n=== BAD: Direct Dependencies on Concrete Classes ===" << std::endl;
     std::cout << "High-level modules depend on low-level implementations\n" << std::endl;
@@ -112,6 +115,8 @@ void demonstrate_dip_principles() {
     std::cout << "     - Flexibility to swap implementations" << std::endl;
     std::cout << "     - Adherence to OCP (open for extension)" << std::endl;
 }
+
+} // end anonymous namespace
 
 #include "SampleRegistry.hpp"
 

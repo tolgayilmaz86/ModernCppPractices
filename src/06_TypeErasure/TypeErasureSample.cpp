@@ -4,6 +4,11 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <type_traits>
+
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+// with similarly named classes in other translation units
+namespace {
 
 // ============================================================================
 // Example 1: Basic Type Erasure - Shape Drawing
@@ -104,7 +109,7 @@ public:
     }
     
     void operator()() {
-        pimpl_->call();
+            pimpl_->call();
     }
 };
 
@@ -262,6 +267,8 @@ void demonstrateTypeErasure() {
     std::cout << "Type erasure would allow storing different types without inheritance" << std::endl;
     std::cout << "Advantage: No inheritance requirement, any type works!" << std::endl;
 }
+
+} // end anonymous namespace
 
 #include "SampleRegistry.hpp"
 

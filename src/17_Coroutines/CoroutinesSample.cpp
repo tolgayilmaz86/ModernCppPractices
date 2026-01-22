@@ -10,6 +10,9 @@
 #include <functional>
 #include <queue>
 
+// Use anonymous namespace to ensure internal linkage and avoid ODR violations
+namespace {
+
 // ============================================================================
 // C++20 Coroutines: Stackless, Suspendable Functions
 // ============================================================================
@@ -499,6 +502,8 @@ void demonstrate_best_practices() {
     std::cout << "- folly::coro: Facebook's production library" << std::endl;
     std::cout << "- asio: Networking with coroutine support" << std::endl;
 }
+
+} // end anonymous namespace
 
 #include "SampleRegistry.hpp"
 
