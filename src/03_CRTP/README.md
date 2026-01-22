@@ -180,6 +180,81 @@ Do you need to store different types in one container?
 | **STL algorithms** | Templates | Types known, zero overhead, works with any iterator |
 | **Device drivers** | Virtual | Hardware detected at runtime, ABI stability required |
 
+## CRTP vs Type Erasure: Choosing the Right Tool
+
+Both CRTP and Type Erasure are alternatives to virtual functions, but they solve **fundamentally different problems**:
+
+| Aspect | CRTP | Type Erasure |
+|--------|------|-------------|
+| **Polymorphism** | Compile-time (static) | Runtime (dynamic) |
+| **Heterogeneous containers** | ❌ No | ✅ Yes |
+| **Performance** | Zero overhead | Virtual call + heap allocation |
+| **Type must be known at** | Compile time | Runtime |
+| **Memory** | Stack (no allocation) | Heap (dynamic allocation) |
+| **Use case** | Mixins, static dispatch | Storing different types uniformly |
+
+### When to Use CRTP
+
+```cpp
+// CRTP: All types known at compile time, no container needed
+template <typename T>
+struct Comparable {
+    bool operator>(const T& other) const {
+        return other < static_cast<const T&>(*this);
+    }
+};
+
+struct Price : Comparable<Price> {
+    double value;
+    bool operator<(const Price& other) const { return value < other.value; }
+};
+
+// Usage: No heap allocation, no virtual calls
+Price p1{10.0}, p2{20.0};
+bool result = p1 > p2;  // Resolved at compile time
+```
+
+**Use CRTP when:**
+- Adding reusable functionality to classes (mixins)
+- You need maximum performance (no virtual calls)
+- Types are known at compile time
+- You don't need to store different types together
+
+### When to Use Type Erasure
+
+```cpp
+// Type Erasure: Store ANY drawable in one container
+class Drawable {  
+public:
+    virtual void draw() = 0;
+    virtual ~Drawable() = default;
+};
+
+std::vector<std::unique_ptr<Drawable>> shapes;  // Heterogeneous container!
+shapes.push_back(std::make_unique<Circle>(5.0));     // Circle
+shapes.push_back(std::make_unique<Rectangle>(3, 4)); // Rectangle  
+shapes.push_back(std::make_unique<CustomShape>());   // Third-party type - no inheritance needed!
+
+for (auto& shape : shapes) shape->draw();  // Works uniformly
+```
+
+**Use Type Erasure when:**
+- Storing different types in the same container
+- Working with third-party types you can't modify
+- You need value semantics (copyable polymorphic objects)
+- Types might be determined at runtime
+
+### Real-World Decision Examples
+
+| Scenario | Best Choice | Why |
+|----------|-------------|-----|
+| **Logging with different backends** | Type Erasure | Store File, Console, Network loggers in one vector |
+| **Adding serialization to classes** | CRTP | Mixin pattern, no container needed |
+| **Event system callbacks** | Type Erasure | Store any callable uniformly (`std::function`) |
+| **Operator overloading helpers** | CRTP | Generate operators at compile time |
+| **Plugin system** | Type Erasure | Plugins loaded at runtime, stored together |
+| **Static singleton pattern** | CRTP | Compile-time, no virtual overhead |
+
 
 ## Sample Output
 

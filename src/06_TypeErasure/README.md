@@ -232,5 +232,103 @@ The pattern uses the "external polymorphism" approach where the polymorphic beha
 - **Inheritance**: When all types can inherit from a common base
 - `std::variant`: When you have a fixed set of types
 - `std::any`: When you need to store any type (type erasure for single objects)
-- Templates: When types are known at compile time</content>
-<parameter name="filePath">d:\repos\ModernCppPractices\src\06_TypeErasure\README.md
+- Templates: When types are known at compile time
+
+## Type Erasure vs CRTP: Choosing the Right Tool
+
+Both Type Erasure and CRTP are alternatives to traditional virtual functions, but they solve **fundamentally different problems**:
+
+| Aspect | Type Erasure | CRTP |
+|--------|-------------|------|
+| **Polymorphism** | Runtime (dynamic) | Compile-time (static) |
+| **Heterogeneous containers** | ✅ Yes | ❌ No |
+| **Performance** | Virtual call + heap allocation | Zero overhead |
+| **Type must be known at** | Runtime | Compile time |
+| **Memory** | Heap (dynamic allocation) | Stack (no allocation) |
+| **Use case** | Storing different types uniformly | Mixins, static dispatch |
+
+### The Key Question
+
+> **"Do I need to store different types in the same container?"**
+
+- **YES** → Use **Type Erasure** (or `std::variant` if types are fixed)
+- **NO** → Use **CRTP** for better performance
+
+### Side-by-Side Comparison
+
+**Type Erasure: Heterogeneous Storage**
+```cpp
+// Store ANY callable - types determined at runtime
+std::vector<std::function<void()>> callbacks;
+callbacks.push_back([]() { std::cout << "Lambda"; });
+callbacks.push_back(MyFunctor{});
+callbacks.push_back(&freeFunction);
+
+for (auto& cb : callbacks) cb();  // All work uniformly
+```
+
+**CRTP: Compile-Time Mixin**
+```cpp
+// Add functionality without virtual calls - types known at compile time
+template <typename T>
+struct Printable {
+    void print() const {
+        std::cout << static_cast<const T&>(*this).toString();
+    }
+};
+
+struct Person : Printable<Person> {
+    std::string name;
+    std::string toString() const { return name; }
+};
+
+Person p{"Alice"};
+p.print();  // No virtual call, resolved at compile time
+```
+
+### When Type Erasure Wins
+
+| Scenario | Why Type Erasure |
+|----------|------------------|
+| **Event handlers** | Unknown callbacks registered at runtime |
+| **Plugin systems** | Plugins implement interface, stored together |
+| **Undo/Redo stack** | Different command types in one deque |
+| **Serialization** | Different types written to same stream |
+| **std::function usage** | Store any callable with same signature |
+
+### When CRTP Wins
+
+| Scenario | Why CRTP |
+|----------|----------|
+| **Operator generation** | Auto-generate `>`, `<=`, `>=` from `<` |
+| **Instance counting** | Track objects without virtual overhead |
+| **Static interfaces** | Enforce interface at compile time |
+| **Expression templates** | Zero-overhead lazy evaluation |
+| **Singleton pattern** | Reusable singleton mixin |
+
+### Hybrid Approach
+
+Sometimes you need both! Use CRTP for the internal implementation and Type Erasure for the external interface:
+
+```cpp
+// Internal: CRTP for code reuse
+template <typename Derived>
+struct ShapeBase {
+    double area() const { return static_cast<const Derived&>(*this).computeArea(); }
+};
+
+struct Circle : ShapeBase<Circle> {
+    double radius;
+    double computeArea() const { return 3.14159 * radius * radius; }
+};
+
+// External: Type Erasure to store different shapes
+class AnyShape { /* type-erased wrapper */ };
+std::vector<AnyShape> shapes;
+shapes.push_back(Circle{5.0});
+shapes.push_back(Rectangle{3, 4});
+
+// Use shapes uniformly
+for (auto& shape : shapes) 
+    std::cout << shape.area() << "\n";
+```

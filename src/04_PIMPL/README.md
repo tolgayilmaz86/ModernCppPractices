@@ -127,5 +127,4 @@ This sample demonstrates:
 4. **Public Interface**: Hiding complex implementation behind simple interface
 5. **Exception Safety**: Proper resource management
 
-The Pimpl pattern is essential for creating maintainable C++ libraries and reducing compilation times in large codebases.</content>
-<parameter name="filePath">d:\repos\ModernCppPractices\src\04_PIMPL\README.md
+The Pimpl pattern is essential for creating maintainable C++ libraries and reducing compilation times in large codebases.
