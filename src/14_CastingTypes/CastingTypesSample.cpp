@@ -1,4 +1,4 @@
-#include "CastSample.hpp"
+#include "CastingTypesSample.hpp"
 #include <iostream>
 #include <bit>
 #include <array>
@@ -6,25 +6,25 @@
 #include <vector>
 
 // Helper classes for demonstration
-class CastSample::Animal {
+class CastingTypesSample::Animal {
 public:
     virtual ~Animal() = default;
     virtual void speak() const { std::cout << "Some animal sound\n"; }
 };
 
-class CastSample::Dog : public Animal {
+class CastingTypesSample::Dog : public Animal {
 public:
     void speak() const override { std::cout << "Woof!\n"; }
     void fetch() const { std::cout << "Dog fetches ball\n"; }
 };
 
-class CastSample::Cat : public Animal {
+class CastingTypesSample::Cat : public Animal {
 public:
     void speak() const override { std::cout << "Meow!\n"; }
     void scratch() const { std::cout << "Cat scratches furniture\n"; }
 };
 
-void CastSample::demonstrate_static_cast() {
+void CastingTypesSample::demonstrate_static_cast() {
     std::cout << "\n=== static_cast - Safe Compile-Time Cast ===\n";
 
     // Numeric conversions
@@ -54,7 +54,7 @@ void CastSample::demonstrate_static_cast() {
     delete another_animal;
 }
 
-void CastSample::demonstrate_dynamic_cast() {
+void CastingTypesSample::demonstrate_dynamic_cast() {
     std::cout << "\n=== dynamic_cast - Runtime-Checked Cast ===\n";
 
     std::vector<Animal*> animals;
@@ -89,7 +89,7 @@ void CastSample::demonstrate_dynamic_cast() {
     for (auto* animal : animals) delete animal;
 }
 
-void CastSample::demonstrate_const_cast() {
+void CastingTypesSample::demonstrate_const_cast() {
     std::cout << "\n=== const_cast - Adding/Removing const ===\n";
 
     const std::string const_str = "Hello, World!";
@@ -107,7 +107,7 @@ void CastSample::demonstrate_const_cast() {
     std::cout << "Added const: " << *const_ptr << "\n";
 }
 
-void CastSample::demonstrate_reinterpret_cast() {
+void CastingTypesSample::demonstrate_reinterpret_cast() {
     std::cout << "\n=== reinterpret_cast - Bit Reinterpretation ===\n";
 
     // Type punning for bit manipulation
@@ -123,7 +123,7 @@ void CastSample::demonstrate_reinterpret_cast() {
     std::cout << "WARNING: reinterpret_cast is very dangerous!\n";
 }
 
-void CastSample::demonstrate_bit_cast() {
+void CastingTypesSample::demonstrate_bit_cast() {
     std::cout << "\n=== std::bit_cast (C++20) - Safe Bit Reinterpretation ===\n";
 
     float f = 1.0f;
@@ -140,7 +140,7 @@ void CastSample::demonstrate_bit_cast() {
     std::cout << "byte array -> float: " << value << "\n";
 }
 
-void CastSample::demonstrate_casting_best_practices() {
+void CastingTypesSample::demonstrate_casting_best_practices() {
     std::cout << "\n=== Casting Best Practices ===\n";
 
     std::cout << "1. Prefer static_cast for most conversions\n";
@@ -152,7 +152,7 @@ void CastSample::demonstrate_casting_best_practices() {
     std::cout << "7. Document why you're casting and why it's safe\n";
 }
 
-void CastSample::demonstrate_best_practices() {
+void CastingTypesSample::demonstrate_best_practices() {
     std::cout << "\n=== Modern C++ Casting Guidelines ===\n";
 
     // Example: Safe upcasting
@@ -174,7 +174,7 @@ void CastSample::demonstrate_best_practices() {
 
 #include "SampleRegistry.hpp"
 
-void CastSample::run() {
+void CastingTypesSample::run() {
     std::cout << "Running C++ Cast Types Sample...\n";
 
     demonstrate_static_cast();
@@ -197,4 +197,4 @@ void CastSample::run() {
 }
 
 // Auto-register this sample
-REGISTER_SAMPLE(CastSample, "C++ Cast Types", 14);
+REGISTER_SAMPLE(CastingTypesSample, "C++ Cast Types", 14);

@@ -350,5 +350,4 @@ Smart pointers integrate seamlessly with other Modern C++ features:
 - **STL containers** that work with movable types
 - **Exception safety guarantees** throughout the standard library
 
-Smart pointers are fundamental to writing safe, modern C++ code. They eliminate entire classes of memory management bugs while maintaining high performance and providing clear ownership semantics.</content>
-<parameter name="filePath">d:\repos\ModernCppPractices\src\08_SmartPointers\README.md
+Smart pointers are fundamental to writing safe, modern C++ code. They eliminate entire classes of memory management bugs while maintaining high performance and providing clear ownership semantics.

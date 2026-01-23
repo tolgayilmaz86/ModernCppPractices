@@ -11,8 +11,8 @@
 #include "10_MoveSemantics/MoveSemanticsSample.hpp"
 #include "11_TagDispatching/TagDispatchingSample.hpp"
 #include "12_DeepShallowCopy/DeepShallowCopySample.hpp"
-#include "13_CopyAndSwapIdiom/CopyAndSwapIdiomSample.hpp"
-#include "14_Cast/CastSample.hpp"
+#include "13_CopyAndSwap/CopyAndSwapSample.hpp"
+#include "14_CastingTypes/CastingTypesSample.hpp"
 #include "15_ThreadSafety/ThreadSafetySample.hpp"
 #include "16_Concepts/ConceptsSample.hpp"
 #include "17_Coroutines/CoroutinesSample.hpp"
@@ -96,13 +96,13 @@ TEST(Samples, DeepShallowCopy) {
 }
 
 TEST(Samples, CopyAndSwapIdiom) {
-    CopyAndSwapIdiomSample sample;
+    CopyAndSwapSample sample;
     // This will run the Copy and Swap Idiom demonstration
     sample.run();
 }
 
 TEST(Samples, Cast) {
-    CastSample sample;
+    CastingTypesSample sample;
     // This will run the Cast Types demonstration
     sample.run();
 }

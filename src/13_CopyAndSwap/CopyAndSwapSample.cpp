@@ -1,10 +1,10 @@
-#include "CopyAndSwapIdiomSample.hpp"
+#include "CopyAndSwapSample.hpp"
 #include <iostream>
 #include <vector>
 #include <algorithm>
 
 // Helper class: Resource demonstrating copy and swap idiom
-class CopyAndSwapIdiomSample::Resource {
+class CopyAndSwapSample::Resource {
 private:
     int* data_;
     std::vector<int> values_;
@@ -60,7 +60,7 @@ public:
     const std::vector<int>& getValues() const { return values_; }
 };
 
-void CopyAndSwapIdiomSample::demonstrate_copy_and_swap() {
+void CopyAndSwapSample::demonstrate_copy_and_swap() {
     std::cout << "\n=== Copy and Swap Idiom ===\n";
 
     std::cout << "Creating resource a:\n";
@@ -85,7 +85,7 @@ void CopyAndSwapIdiomSample::demonstrate_copy_and_swap() {
     std::cout << "\n";
 }
 
-void CopyAndSwapIdiomSample::demonstrate_exception_safety() {
+void CopyAndSwapSample::demonstrate_exception_safety() {
     std::cout << "\n=== Exception Safety ===\n";
     std::cout << "Copy and swap provides strong exception safety:\n";
     std::cout << "- If copy construction fails, original object is unchanged\n";
@@ -93,7 +93,7 @@ void CopyAndSwapIdiomSample::demonstrate_exception_safety() {
     std::cout << "- Assignment either succeeds completely or fails completely\n";
 }
 
-void CopyAndSwapIdiomSample::demonstrate_best_practices() {
+void CopyAndSwapSample::demonstrate_best_practices() {
     std::cout << "\n=== Best Practices ===\n";
     std::cout << "- Use copy and swap for assignment operators\n";
     std::cout << "- Make swap noexcept for efficiency\n";
@@ -104,7 +104,7 @@ void CopyAndSwapIdiomSample::demonstrate_best_practices() {
 
 #include "SampleRegistry.hpp"
 
-void CopyAndSwapIdiomSample::run() {
+void CopyAndSwapSample::run() {
     std::cout << "Running Copy and Swap Idiom Sample...\n";
     demonstrate_copy_and_swap();
     demonstrate_exception_safety();
@@ -113,4 +113,4 @@ void CopyAndSwapIdiomSample::run() {
 }
 
 // Auto-register this sample
-REGISTER_SAMPLE(CopyAndSwapIdiomSample, "Copy and Swap Idiom", 13);
+REGISTER_SAMPLE(CopyAndSwapSample, "Copy and Swap Idiom", 13);

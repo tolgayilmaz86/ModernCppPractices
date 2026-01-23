@@ -3,7 +3,7 @@
 #include "../Testable.hpp"
 #include <string>
 
-class CopyAndSwapIdiomSample : public Testable {
+class CopyAndSwapSample : public Testable {
 public:
     void run() override;
     std::string name() const override { return "Copy and Swap Idiom"; }

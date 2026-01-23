@@ -3,7 +3,7 @@
 #include "../Testable.hpp"
 #include <string>
 
-class CastSample : public Testable {
+class CastingTypesSample : public Testable {
 public:
     void run() override;
     std::string name() const override { return "C++ Cast Types"; }

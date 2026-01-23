@@ -17,8 +17,8 @@ add_executable(unit_tests test.cpp
     ../src/10_MoveSemantics/MoveSemanticsSample.cpp 
     ../src/11_TagDispatching/TagDispatchingSample.cpp 
     ../src/12_DeepShallowCopy/DeepShallowCopySample.cpp 
-    ../src/13_CopyAndSwapIdiom/CopyAndSwapIdiomSample.cpp 
-    ../src/14_Cast/CastSample.cpp 
+    ../src/13_CopyAndSwap/CopyAndSwapSample.cpp 
+    ../src/14_CastingTypes/CastingTypesSample.cpp 
     ../src/15_ThreadSafety/ThreadSafetySample.cpp 
     ../src/16_Concepts/ConceptsSample.cpp 
     ../src/17_Coroutines/CoroutinesSample.cpp
