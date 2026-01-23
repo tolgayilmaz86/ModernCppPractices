@@ -27,6 +27,7 @@ add_executable(unit_tests test.cpp
     ../src/20_LSP/LSPSample.cpp
     ../src/21_ISP/ISPSample.cpp
     ../src/22_DIP/DIPSample.cpp
+    ../src/23_UMLRelationships/UMLRelationshipsSample.cpp
 )
 
 # Enable strict compile warnings for tests

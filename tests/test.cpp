@@ -21,6 +21,7 @@
 #include "20_LSP/LSPSample.hpp"
 #include "21_ISP/ISPSample.hpp"
 #include "22_DIP/DIPSample.hpp"
+#include "23_UMLRelationships/UMLRelationshipsSample.hpp"
 
 TEST(Samples, RAII) {
     RAIISample sample;
@@ -152,6 +153,12 @@ TEST(SOLID, InterfaceSegregationPrinciple) {
 TEST(SOLID, DependencyInversionPrinciple) {
     DIPSample sample;
     // This will run the Dependency Inversion Principle demonstration
+    sample.run();
+}
+
+TEST(OOP, UMLRelationships) {
+    UMLRelationshipsSample sample;
+    // This will run the UML Relationships demonstration
     sample.run();
 }
 

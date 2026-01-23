@@ -502,5 +502,4 @@ void safe_for_each(Container& c, Func f) {
 }
 ```
 
-Exception safety is fundamental to writing robust, maintainable C++ code. It ensures that your programs behave predictably even in failure scenarios, preventing data corruption and resource leaks. Modern C++ provides excellent tools for achieving exception safety, but it requires careful design and testing.</content>
-<parameter name="filePath">d:\repos\ModernCppPractices\src\09_ExceptionSafety\README.md
+Exception safety is fundamental to writing robust, maintainable C++ code. It ensures that your programs behave predictably even in failure scenarios, preventing data corruption and resource leaks. Modern C++ provides excellent tools for achieving exception safety, but it requires careful design and testing.

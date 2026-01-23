@@ -28,6 +28,7 @@
 #include "20_LSP/LSPSample.hpp"
 #include "21_ISP/ISPSample.hpp"
 #include "22_DIP/DIPSample.hpp"
+#include "23_UMLRelationships/UMLRelationshipsSample.hpp"
 
 int main(int argc, char* argv[]) {
     auto& registry = SampleRegistry::instance();

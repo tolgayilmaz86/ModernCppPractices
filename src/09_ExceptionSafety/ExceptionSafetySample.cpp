@@ -114,6 +114,10 @@ public:
 // RAII for Exception Safety
 // ============================================================================
 
+/** 
+ * SafeFile class demonstrating RAII for file handling
+ * with exception safety.
+*/
 class SafeFile {
 private:
     std::string filename_;
@@ -143,6 +147,10 @@ public:
     }
 };
 
+/** 
+ * Transaction class demonstrating exception-safe operations
+ * with rollback capability.
+*/
 class Transaction {
 private:
     std::vector<std::function<void()>> rollbacks_;
