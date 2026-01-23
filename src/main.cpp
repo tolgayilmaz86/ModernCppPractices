@@ -29,6 +29,8 @@
 #include "21_ISP/ISPSample.hpp"
 #include "22_DIP/DIPSample.hpp"
 #include "23_UMLRelationships/UMLRelationshipsSample.hpp"
+#include "24_ThreeWayComparison/ThreeWayComparisonSample.hpp"
+#include "25_Projections/ProjectionsSample.hpp"
 
 int main(int argc, char* argv[]) {
     auto& registry = SampleRegistry::instance();

@@ -22,6 +22,8 @@
 #include "21_ISP/ISPSample.hpp"
 #include "22_DIP/DIPSample.hpp"
 #include "23_UMLRelationships/UMLRelationshipsSample.hpp"
+#include "24_ThreeWayComparison/ThreeWayComparisonSample.hpp"
+#include "25_Projections/ProjectionsSample.hpp"
 
 TEST(Samples, RAII) {
     RAIISample sample;
@@ -159,6 +161,18 @@ TEST(SOLID, DependencyInversionPrinciple) {
 TEST(OOP, UMLRelationships) {
     UMLRelationshipsSample sample;
     // This will run the UML Relationships demonstration
+    sample.run();
+}
+
+TEST(Samples, ThreeWayComparison) {
+    ThreeWayComparisonSample sample;
+    // This will run the Three-Way Comparison (Spaceship Operator) demonstration
+    sample.run();
+}
+
+TEST(Samples, Projections) {
+    ProjectionsSample sample;
+    // This will run the C++20 Projections demonstration
     sample.run();
 }
 
