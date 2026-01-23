@@ -24,6 +24,7 @@
 #include "23_UMLRelationships/UMLRelationshipsSample.hpp"
 #include "24_ThreeWayComparison/ThreeWayComparisonSample.hpp"
 #include "25_Projections/ProjectionsSample.hpp"
+#include "26_InputOutputStream/InputOutputStreamSample.hpp"
 
 TEST(Samples, RAII) {
     RAIISample sample;
@@ -173,6 +174,12 @@ TEST(Samples, ThreeWayComparison) {
 TEST(Samples, Projections) {
     ProjectionsSample sample;
     // This will run the C++20 Projections demonstration
+    sample.run();
+}
+
+TEST(Samples, InputOutputStream) {
+    InputOutputStreamSample sample;
+    // This will run the Input/Output Stream Extensions demonstration
     sample.run();
 }
 

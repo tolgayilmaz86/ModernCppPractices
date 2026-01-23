@@ -31,6 +31,7 @@
 #include "23_UMLRelationships/UMLRelationshipsSample.hpp"
 #include "24_ThreeWayComparison/ThreeWayComparisonSample.hpp"
 #include "25_Projections/ProjectionsSample.hpp"
+#include "26_InputOutputStream/InputOutputStreamSample.hpp"
 
 int main(int argc, char* argv[]) {
     auto& registry = SampleRegistry::instance();
