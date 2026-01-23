@@ -15,11 +15,58 @@
 
 namespace GameEngine {
 
-// Forward declaration for factory
+// Forward declarations
 class GameEntity;
+class EntityFactory;
+
+// ============================================================================
+// BASE CLASS: GameEntity
+// ============================================================================
+
+class GameEntity {
+public:
+    GameEntity() = default;
+    GameEntity(std::string name, float x, float y) 
+        : name_(std::move(name)), x_(x), y_(y) {}
+    
+    virtual ~GameEntity() = default;
+
+    // Getters
+    const std::string& getName() const { return name_; }
+    float getX() const { return x_; }
+    float getY() const { return y_; }
+
+    // Virtual type identifier for serialization
+    virtual std::string typeName() const { return "GameEntity"; }
+
+    // Friend declaration for operator<< (calls virtual print)
+    friend std::ostream& operator<<(std::ostream& os, const GameEntity& entity);
+    
+    // Friend declaration for operator>> (calls virtual input)
+    friend std::istream& operator>>(std::istream& is, GameEntity& entity);
+
+    // Virtual print - derived classes override to add their fields
+    virtual std::ostream& print(std::ostream& os) const {
+        os << name_ << " " << x_ << " " << y_;
+        return os;
+    }
+
+    // Virtual input - derived classes override to read their fields
+    // Public so operator>> for unique_ptr can access it
+    virtual std::istream& input(std::istream& is) {
+        is >> name_ >> x_ >> y_;
+        return is;
+    }
+
+protected:
+    std::string name_ = "Unknown";
+    float x_ = 0.0f;
+    float y_ = 0.0f;
+};
 
 // ============================================================================
 // ENTITY FACTORY - Creates entities from type strings (for deserialization)
+// Must be defined AFTER GameEntity is complete (unique_ptr needs complete type)
 // ============================================================================
 
 class EntityFactory {
@@ -69,51 +116,6 @@ private:
         }); \
         return true; \
     }()
-
-// ============================================================================
-// BASE CLASS: GameEntity
-// ============================================================================
-
-class GameEntity {
-public:
-    GameEntity() = default;
-    GameEntity(std::string name, float x, float y) 
-        : name_(std::move(name)), x_(x), y_(y) {}
-    
-    virtual ~GameEntity() = default;
-
-    // Getters
-    const std::string& getName() const { return name_; }
-    float getX() const { return x_; }
-    float getY() const { return y_; }
-
-    // Virtual type identifier for serialization
-    virtual std::string typeName() const { return "GameEntity"; }
-
-    // Friend declaration for operator<< (calls virtual print)
-    friend std::ostream& operator<<(std::ostream& os, const GameEntity& entity);
-    
-    // Friend declaration for operator>> (calls virtual input)
-    friend std::istream& operator>>(std::istream& is, GameEntity& entity);
-
-    // Virtual print - derived classes override to add their fields
-    virtual std::ostream& print(std::ostream& os) const {
-        os << name_ << " " << x_ << " " << y_;
-        return os;
-    }
-
-    // Virtual input - derived classes override to read their fields
-    // Public so operator>> for unique_ptr can access it
-    virtual std::istream& input(std::istream& is) {
-        is >> name_ >> x_ >> y_;
-        return is;
-    }
-
-protected:
-    std::string name_ = "Unknown";
-    float x_ = 0.0f;
-    float y_ = 0.0f;
-};
 
 // Non-member operator<< calls virtual print()
 inline std::ostream& operator<<(std::ostream& os, const GameEntity& entity) {
