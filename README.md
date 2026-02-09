@@ -198,6 +198,164 @@ bash run.sh RAII           # Run by name
 run.bat 02                 # Windows batch script
 ```
 
+## 🐛 Debugging Samples
+
+This project includes comprehensive debugging support for VS Code with pre-configured launch configurations. Debug any sample to step through code, inspect variables, and understand Modern C++ concepts in action.
+
+### Prerequisites for Debugging
+
+- **VS Code** with C++ extension installed
+- **Project built in Debug mode** (required for debugging symbols)
+- **Breakpoints** set in sample code
+
+### Quick Debug Start
+
+1. **Build in Debug mode:**
+   ```bash
+   cmake --build build --config Debug
+   ```
+
+2. **Open any sample file** (e.g., `src/06_TypeErasure/TypeErasureSample.cpp`)
+
+3. **Set breakpoints** by clicking in the left gutter next to line numbers
+
+4. **Start debugging:**
+   - Press `F5` or go to **Run → Start Debugging**
+   - Select **"Run Single Sample (Debug)"** from the dropdown
+   - Choose your sample from the picker (e.g., "6 - Type Erasure")
+
+### Debug Configurations
+
+The project includes several debug configurations in `.vscode/launch.json`:
+
+| Configuration | Purpose | When to Use |
+|---------------|---------|-------------|
+| **Run Single Sample (Debug)** | Debug one specific sample | Learning a specific C++ concept |
+| **Run All Samples (Debug)** | Debug through all samples sequentially | Understanding sample flow or testing breakpoints |
+| **Run Unit Tests (Debug)** | Debug the test suite | Investigating test failures |
+| **Debug Tests** | Debug individual test cases | Deep testing analysis |
+
+### Step-by-Step Debugging Guide
+
+#### 1. Setting Breakpoints
+```cpp
+// Example: Set breakpoint in TypeErasureSample.cpp
+void TypeErasureSample::run() {
+    std::cout << "Running Type Erasure Sample..." << std::endl;  // ← Click here for breakpoint
+    
+    // Your breakpoint will hit here when debugging
+    std::vector<AnyShape> shapes;
+    shapes.emplace_back(CircleShape{5.0});  // ← Or here to inspect object creation
+}
+```
+
+#### 2. Debug Controls
+- **F5**: Continue execution to next breakpoint
+- **F10**: Step over (execute current line, don't enter functions)
+- **F11**: Step into (enter function calls)
+- **Shift+F11**: Step out (exit current function)
+- **Shift+F5**: Stop debugging
+
+#### 3. Inspecting Variables
+- **Variables Panel**: View local, global, and static variables
+- **Watch Panel**: Add custom expressions (e.g., `shapes.size()`, `shape.area()`)
+- **Hover**: Mouse over variables in code to see values
+- **Debug Console**: Evaluate expressions like `shapes[0].area()`
+
+#### 4. Advanced Debugging Features
+
+**Conditional Breakpoints:**
+- Right-click breakpoint → Add condition (e.g., `i == 5`)
+- Break only when specific conditions are met
+
+**Logpoints:**
+- Right-click breakpoint → "Log Message"
+- Print debug info without stopping execution
+
+**Call Stack Inspection:**
+- View function call hierarchy
+- Jump to different stack frames
+- Understand program flow
+
+### Debugging Different Sample Types
+
+#### Template-Heavy Samples (CRTP, SFINAE)
+```cpp
+// Set breakpoint in template instantiation
+template <typename T>
+void process(T&& value) {
+    std::cout << "Processing: " << value << std::endl;  // Break here
+}
+
+// The debugger will show template parameters
+process(42);  // T = int
+process("hello");  // T = const char*
+```
+
+#### Polymorphic Code (Type Erasure, Inheritance)
+```cpp
+// Break in virtual function calls
+void drawShape(const Drawable& shape) {
+    shape.draw();  // Break here to see dynamic dispatch
+}
+
+// Inspect the actual derived type at runtime
+```
+
+#### Exception Safety Samples
+```cpp
+// Break on exception throw/catch
+try {
+    riskyOperation();  // Break here
+    throw std::runtime_error("Error!");  // Or here
+} catch (const std::exception& e) {
+    std::cout << "Caught: " << e.what() << std::endl;  // Break here
+}
+```
+
+### Troubleshooting Common Issues
+
+#### Breakpoint Not Hit
+- **Ensure Debug build**: `cmake --build build --config Debug`
+- **Check configuration**: Select correct debug config from dropdown
+- **Rebuild after changes**: Clean rebuild if code was modified
+
+#### Variables Not Showing Values
+- **Debug symbols missing**: Rebuild in Debug configuration
+- **Optimized out**: Some variables may be optimized away in complex code
+- **Use Watch window**: Add variables explicitly to watch
+
+#### Program Runs But Doesn't Stop
+- **Wrong sample selected**: Verify sample number in debug config
+- **Conditional breakpoint**: Check if conditions are met
+- **Release vs Debug**: Ensure using Debug configuration
+
+### Debug Tips for Learning C++
+
+- **Step through STL containers**: Watch how `std::vector`, `std::unique_ptr` work internally
+- **Observe object lifetimes**: Set breakpoints in constructors/destructors
+- **Template instantiation**: See how templates generate code at compile time
+- **Memory layout**: Inspect object sizes and layouts with debugger
+- **Performance analysis**: Use debugger to understand optimization opportunities
+
+### Integration with Development Workflow
+
+Debugging is integrated into the development process:
+
+```bash
+# 1. Make code changes
+# 2. Build debug version
+cmake --build build --config Debug
+
+# 3. Set breakpoints in new code
+# 4. Debug specific sample
+# 5. Verify behavior
+# 6. Run tests to ensure no regressions
+ctest --test-dir build
+```
+
+This debugging setup makes it easy to experiment with Modern C++ concepts while understanding exactly how they work under the hood!
+
 ### Development Workflow
 
 #### Adding a New Sample

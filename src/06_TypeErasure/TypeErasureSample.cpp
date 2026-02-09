@@ -268,6 +268,65 @@ void demonstrateTypeErasure() {
     std::cout << "Advantage: No inheritance requirement, any type works!" << std::endl;
 }
 
+// ============================================================================
+// Example 5: Hybrid Approach - CRTP + Type Erasure
+// ============================================================================
+
+// Internal: CRTP for code reuse
+template <typename Derived>
+struct ShapeBase {
+    double area() const { return static_cast<const Derived&>(*this).computeArea(); }
+};
+
+// Concrete shapes using CRTP
+struct CircleShape : ShapeBase<CircleShape> {
+    double radius;
+    explicit CircleShape(double r) : radius(r) {}
+    double computeArea() const { return 3.14159 * radius * radius; }
+};
+
+struct Rectangle : ShapeBase<Rectangle> {
+    double width, height;
+    Rectangle(double w, double h) : width(w), height(h) {}
+    double computeArea() const { return width * height; }
+};
+
+// External: Type Erasure to store different shapes
+class AnyShape {
+private:
+    // Concept defines the interface for area calculation
+    struct Concept {
+        virtual ~Concept() = default;
+        virtual double area() const = 0;
+        virtual std::unique_ptr<Concept> clone() const = 0;
+    };
+
+    // Model template implements the Concept for any shape type T
+    template <typename T>
+    struct Model : Concept {
+        T shape_;
+        Model(T s) : shape_(std::move(s)) {}
+        double area() const override { return shape_.area(); }
+        std::unique_ptr<Concept> clone() const override {
+            return std::make_unique<Model<T>>(shape_);
+        }
+    };
+
+    std::unique_ptr<Concept> _ptr;
+
+public:
+    template <typename T>
+    AnyShape(T shape) : _ptr(std::make_unique<Model<T>>(std::move(shape))) {}
+
+    AnyShape(const AnyShape& other) : _ptr(other._ptr->clone()) {}
+    AnyShape& operator=(const AnyShape& other) {
+        _ptr = other._ptr->clone();
+        return *this;
+    }
+
+    double area() const { return _ptr->area(); }
+};
+
 } // end anonymous namespace
 
 #include "SampleRegistry.hpp"
@@ -325,6 +384,17 @@ void TypeErasureSample::run() {
     // Show what type erasure enables
     std::cout << "\nType erasure enables storing different types without inheritance" << std::endl;
     std::cout << "(Full implementation would allow any drawable type)" << std::endl;
+
+    std::cout << "\n=== Hybrid Approach: CRTP + Type Erasure ===" << std::endl;
+    std::vector<AnyShape> hybrid_shapes;
+    hybrid_shapes.emplace_back(CircleShape{5.0});
+    hybrid_shapes.emplace_back(Rectangle{3.0, 4.0});
+    hybrid_shapes.emplace_back(CircleShape{2.5});
+
+    std::cout << "Areas of shapes:" << std::endl;
+    for (const auto& shape : hybrid_shapes) {
+        std::cout << "Area: " << shape.area() << std::endl;
+    }
 
     std::cout << "\n=== Performance Considerations ===" << std::endl;
     std::cout << "Type Erasure Benefits:" << std::endl;

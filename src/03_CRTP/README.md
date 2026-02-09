@@ -220,7 +220,9 @@ bool result = p1 > p2;  // Resolved at compile time
 - Types are known at compile time
 - You don't need to store different types together
 
-### When to Use Type Erasure
+## When to Use Type Erasure
+
+[See also: Type Erasure README](../06_TypeErasure/README.md) for a deeper dive into runtime polymorphism and type erasure patterns.
 
 ```cpp
 // Type Erasure: Store ANY drawable in one container

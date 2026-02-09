@@ -54,6 +54,35 @@ int main(int argc, char* argv[]) {
             std::cout << i + 1 << ": " << samples[i]->name() << std::endl;
         }
         std::cout << "Run with: ./main <number>" << std::endl;
+
+        std::string input;
+        std::cout << "Enter sample number or press Enter to run all: ";
+        std::getline(std::cin, input);
+        if (!input.empty()) {
+            try {
+                int num = std::stoi(input);
+                if (num >= 1 && num <= static_cast<int>(samples.size())) {
+                    samples[num - 1]->run();
+                } else {
+                    std::cout << "Invalid sample number. Available samples: 1-" << samples.size() << std::endl;
+                }
+            } catch (const std::exception&) {
+                std::cout << "Invalid argument. Please provide a number." << std::endl;
+            }
+            return 0;
+        }
+
+        std::cout << "Running all samples..." << std::endl;
+        std::cout << std::string(50, '=') << std::endl;
+        
+        for (size_t i = 0; i < samples.size(); ++i) {
+            std::cout << "\nSample " << (i + 1) << ": " << samples[i]->name() << std::endl;
+            std::cout << std::string(30, '-') << std::endl;
+            samples[i]->run();
+            std::cout << std::string(50, '=') << std::endl;
+        }
+        
+        std::cout << "\nAll samples completed!" << std::endl;
     }
 
     return 0;

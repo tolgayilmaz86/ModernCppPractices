@@ -83,15 +83,13 @@ void processFile(const std::string& path) {
 - **Cleaner Code**: Reduces boilerplate code for resource management
 - **Prevents Resource Leaks**: Guarantees cleanup
 
-## Real-World Example: File Handle Management
+## Real-World Examples
+
+See `RAIISample.cpp` for the implementations.
+
+### Example 1: File Handle Management
 
 In this example, we create a `File` class that demonstrates RAII by automatically opening and closing a file. This ensures that the file is always closed, preventing resource leaks.
-
-### Code Example
-
-See `RAIISample.cpp` for the implementation.
-
-### Usage
 
 ```cpp
 {
@@ -102,9 +100,56 @@ See `RAIISample.cpp` for the implementation.
 }
 ```
 
+### Example 2: ScopedTimer (Execution Time Measurement)
+
+This example demonstrates RAII for automatic timing - a practical pattern for profiling and debugging. The timer starts when constructed and automatically reports the elapsed time when it goes out of scope.
+
+```cpp
+// ✅ GOOD: RAII timer - no need to manually stop or calculate duration
+class ScopedTimer {
+    std::string operationName;
+    std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
+public:
+    explicit ScopedTimer(const std::string& name)
+        : operationName(name), startTime(std::chrono::high_resolution_clock::now()) {}
+
+    ~ScopedTimer() {
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        std::cout << operationName << " completed in " << duration.count() << " ms\n";
+    }
+
+    // Non-copyable, non-movable
+    ScopedTimer(const ScopedTimer&) = delete;
+    ScopedTimer& operator=(const ScopedTimer&) = delete;
+};
+
+// Usage
+{
+    ScopedTimer timer("Database query");
+    performDatabaseQuery();  // If this throws, timer still reports!
+}   // Automatically prints: "Database query completed in X ms"
+```
+
+**Key Insight:** Nested timers work naturally with RAII - inner timers report first (LIFO order), just like a call stack:
+
+```cpp
+{
+    ScopedTimer outer("Outer");
+    {
+        ScopedTimer inner("Inner");
+        // ... work ...
+    }   // Inner reports first
+}   // Outer reports second
+```
+
+---
+
 This pattern is commonly used for:
 - File handles
 - Network sockets
 - Database connections
 - Mutex locks
 - Memory management (smart pointers)
+- Execution timing and profiling
+- Scope guards and cleanup actions

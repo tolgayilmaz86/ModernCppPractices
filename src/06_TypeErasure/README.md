@@ -17,6 +17,8 @@ Type erasure typically uses a combination of:
 3. **Value Semantics**: Copy and assignment operations
 4. **Type Safety**: Compile-time type checking
 
+In the following code section the wrapper class `Wrapper` can hold any type that satisfies the `Concept` interface, and the actual type is hidden behind the `pimpl_` pointer. Concept is satisfied by any type that implements the required operations (operation and clone), and the Model template allows for any type to be wrapped without inheritance.
+
 ```cpp
 // Concept (interface)
 struct Concept {
@@ -50,6 +52,17 @@ Wrapper w1 = SomeType{};
 w1.operation();
 Wrapper w2 = AnotherType{};
 w2.operation();
+
+// Usage with clone
+// The copy constructor uses the clone method to create a deep copy of the underlying object.
+// This ensures that the new Wrapper instance owns its own separate copy of the contained object,
+// rather than sharing or aliasing the same object as the original Wrapper. This is essential in
+// type erasure patterns to preserve value semantics and avoid issues with object slicing or
+// unintended sharing of state.
+Wrapper w3 = w1;  // Copy constructor uses clone
+w3.operation();
+
+
 ```
 
 ### Other examples of Type Erasure
@@ -103,6 +116,8 @@ class AnyPrintable {
     
 public:
     // Constructor accepts any printable type
+    // You can read here as; 
+    // AnyPrintable can be constructed from any type T that satisfies the Concept (i.e., has a print method). The Model<T> is created to wrap the specific type T, and the Concept interface allows us to call print() without knowing the actual type at compile time.
     template <typename T>
     AnyPrintable(T value) : ptr(std::make_unique<Model<T>>(std::move(value))) {}
     
@@ -241,7 +256,7 @@ The pattern uses the "external polymorphism" approach where the polymorphic beha
 - Templates: When types are known at compile time
 
 ## Type Erasure vs CRTP: Choosing the Right Tool
-
+See also: [CRTP README](../03_CRTP/README.md) for a deeper dive into compile-time polymorphism and CRTP patterns.
 Both Type Erasure and CRTP are alternatives to traditional virtual functions, but they solve **fundamentally different problems**:
 
 | Aspect | Type Erasure | CRTP |
@@ -329,7 +344,37 @@ struct Circle : ShapeBase<Circle> {
 };
 
 // External: Type Erasure to store different shapes
-class AnyShape { /* type-erased wrapper */ };
+class AnyShape { 
+public:
+    template <typename T>
+    AnyShape(T shape) : _ptr(std::make_unique<Model<T>>(std::move(shape))) {}
+
+    double area() const { return _ptr->area(); }
+private:
+
+    // Concept defines the interface for area calculation
+    struct Concept {
+        virtual ~Concept() = default;
+        virtual double area() const = 0;
+    };
+
+    // Model template implements the Concept for any shape type T
+    template <typename T>
+    struct Model : Concept {
+        T shape_;
+        Model(T s) : shape_(std::move(s)) {}
+        // The area() method calls the CRTP-based area() of the specific shape type, 
+        // allowing us to compute the area without knowing the actual type at compile time.
+        double area() const override { return shape_.area(); }
+    };
+
+    // The unique_ptr holds a pointer to the Concept interface, 
+    // allowing AnyShape to call area() without knowing the actual type of the shape. 
+    // This is the essence of type erasure - 
+    // the specific type information is hidden behind a uniform interface.
+    std::unique_ptr<Concept> _ptr;
+};
+
 std::vector<AnyShape> shapes;
 shapes.push_back(Circle{5.0});
 shapes.push_back(Rectangle{3, 4});
