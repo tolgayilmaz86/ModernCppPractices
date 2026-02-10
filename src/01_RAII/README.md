@@ -143,6 +143,60 @@ public:
 }   // Outer reports second
 ```
 
+### Example 3: Wrap a legacy C driver (raw pointers) in Modern C++20 safely using RAII and std::span
+
+Say that we have to wrap a legacy C driver that expects a uint8_t* buffer, int len callback in Modern C++20? 
+Specifically, we use std::span and RAII to ensure that even if the C driver acts weird, our C++ application layer remains memory-safe.
+
+What we need is:
+- Usage of std::span to wrap the raw C pointers safely.
+- Usage of a wrapper class (RAII) that handles the C driver's init/deinit.
+
+We would create an RAII Wrapper Class for the C driver:
+1. Constructor: Calls the C driver's init() function.
+2. Destructor: Calls deinit(), ensuring resources are freed even if an exception occurs (Exception Safety).
+3. Interface: Replace uint8_t* buf, int len with std::span<uint8_t>.
+
+> Note: std::span is a non-owning view over a contiguous sequence of objects. It does not own the memory it points to.
+
+```cpp
+// C-style driver interface
+typedef void* DeviceHandle;
+
+int c_driver_init(DeviceHandle* handle);
+int c_driver_process(DeviceHandle handle, const uint8_t* buffer, int len);
+int c_driver_deinit(DeviceHandle handle);
+
+// Modern C++20 RAII Wrapper
+class DeviceWrapper {
+    DeviceHandle handle = nullptr;
+public:
+    DeviceWrapper() {
+        if (c_driver_init(&handle)) throw std::runtime_error("Failed to initialize C driver");
+    }
+    ~DeviceWrapper() { if (handle) c_driver_deinit(handle); }
+
+    // Process data using std::span
+    int process(std::span<uint8_t> buffer) {
+        if (!handle) return -1;
+        return c_driver_process(handle, buffer.data(), static_cast<int>(buffer.size()));
+    }
+};
+
+// Usage in Modern C++20
+void processData(std::vector<uint8_t>& data) {
+    DeviceWrapper device;
+    
+    // Use std::span to wrap the vector's data
+    std::span<uint8_t> buffer(data.data(), data.size());
+    
+    int result = device.process(buffer);
+    if (result != 0) {
+        throw std::runtime_error("C driver processing failed");
+    }
+}
+```
+
 ---
 
 This pattern is commonly used for:
@@ -153,3 +207,4 @@ This pattern is commonly used for:
 - Memory management (smart pointers)
 - Execution timing and profiling
 - Scope guards and cleanup actions
+- Wrapping legacy C APIs

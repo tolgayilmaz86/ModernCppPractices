@@ -78,6 +78,43 @@ private:
 };
 ```
 
+### 4. Real-world example: Sensor Base
+Say that we have 10 different types of Feed Sensors. 
+They all share common logic but have different hardware driver calls (I2C vs SPI). 
+Here is a pseudo-code skeleton of how I would implement a SensorBase using CRTP 
+so that the `read()` call is resolved at compile time (no v-table cost), 
+and how I would use C++20 Concepts to ensure every Derived sensor actually implements the `read_raw()` function.
+
+```cpp
+// 1. Define the Concept (The Interface Contract)
+template<typename T>
+concept SensorDriver = requires(T t) {
+    // Must have a read_raw_implementation method that returns an int
+    { t.read_raw_implementation() } -> std::convertible_to<int>;
+};
+
+// 2. The Base Class (CRTP)
+template <typename Derived>
+requires SensorDriver<Derived> // Enforce the concept at compile time
+class SensorBase {
+public:
+    int read() {
+        // Static dispatch: Compiler inlines this call
+        return static_cast<Derived*>(this)->read_raw_implementation();
+    }
+};
+
+// 3. The Concrete Implementation (STM32 I2C)
+class TemperatureSensor : public SensorBase<TemperatureSensor> {
+public:
+    int read_raw_implementation() {
+        // Direct hardware call (HAL_I2C_Master_Receive...)
+        return 25; 
+    }
+};
+```
+> This guarantees that if a developer forgets read_raw_implementation, the code won't compile, giving us the safety of virtual methods with the performance of raw C."
+
 ## Implementation Details
 
 In this sample, we demonstrate three CRTP mixins:

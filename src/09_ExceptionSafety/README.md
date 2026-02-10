@@ -32,131 +32,6 @@ void safe_operation() {
 }
 ```
 
-## Sample Output
-
-```
-Running Exception Safety Sample...
-
-=== Exception Safety Guarantees ===
-
-=== Testing Basic Exception Safety Guarantee ===
-Resource 'BasicTest' acquired. Total instances: 1
-Caught exception: Simulated failure after adding resource
-Resource 'BasicTest' released. Total instances: 0
-Basic guarantee: Object state is valid but may have changed
-Current resources (1):
-  - BasicTest
-
-=== Testing Strong Exception Safety Guarantee ===
-Resource 'StrongTest' acquired. Total instances: 1
-Resource 'StrongTest' released. Total instances: 0
-Resource 'FailStrong' acquired. Total instances: 1
-Resource 'FailStrong' released. Total instances: 0
-Caught exception: Strong guarantee: operation failed, rolling back
-Strong guarantee: Operation either succeeded completely or failed completely
-Current resources (0):
-
-=== Testing No-Throw Guarantee ===
-Resource 'NoThrowTest' acquired. Total instances: 1
-No-throw guarantee: resource added successfully
-Current resources (1):
-  - NoThrowTest
-
-=== RAII for Exception Safety ===
-File 'example.txt' opened
-Writing to file 'example.txt': Hello, World!
-File 'example.txt' closed
-Exception caught: Something went wrong!
-File was automatically closed by RAII
-
-=== Transaction Pattern for Exception Safety ===
-Resource 'TransactionResource1' acquired. Total instances: 1
-Resource 'TransactionResource2' acquired. Total instances: 2
-Transaction failed - rolling back...
-Rolling back: cleaning up TransactionResource2
-Rolling back: cleaning up TransactionResource1
-Resource 'TransactionResource2' released. Total instances: 1
-Resource 'TransactionResource1' released. Total instances: 0
-Transaction failed: Transaction failed!
-All resources were automatically cleaned up
-
-=== Container Exception Safety ===
-Safely added 1 to vector
-Safely added 2 to vector
-Safely inserted 99 at position 1
-Safely resized vector to 5 elements
-Vector contents: [1, 99, 2, 0, 0]
-Container operation failed: Invalid position
-Container state remains valid:
-Vector contents: [1, 99, 2, 0, 0]
-
-=== Exception Specifications ===
-This operation never throws
-Processed non-negative value: 5
-Conditional noexcept threw: Negative value not allowed
-Processed value: 10
-May-throw function threw: The answer is not allowed!
-
-=== Exception Handling Best Practices ===
-Caught by const reference: Test exception
-Caught specific exception: Invalid argument
-Resource 'RAII_Resource' acquired. Total instances: 1
-Using resource 'RAII_Resource'
-Resource 'RAII_Resource' released. Total instances: 0
-Safe destructor cleanup
-=== std::expected - Monadic Error Handling (C++23) ===
-
---- Traditional Approach (with exceptions) ---
-Traditional result: 42.5
-Traditional approach failed: File read failed: Failed to open file
-
---- Monadic Approach (with std::expected) ---
-Monadic success: 42.5
-Monadic failed: Failed to open file
-Monadic failed: File is corrupted
-Monadic failed: Division by zero
-
---- Transform Operation ---
-Transform result: 85
-
-std::expected advantages:
-- Composable operations with and_then()
-- Error handling with or_else()
-- Value transformation with transform()
-- No exception overhead in success path
-- Type-safe error handling
-- Clear intent: success/failure is explicit
-=== Exception Safety Summary ===
-Exception Safety Guarantees:
-- No guarantee: Operation may leave object in invalid state
-- Basic guarantee: Invariants preserved, but state may change
-- Strong guarantee: Operation succeeds completely or fails completely
-- No-throw guarantee: Operation never throws exceptions
-
-Key Principles:
-- Use RAII for automatic resource cleanup
-- Prefer strong exception safety when possible
-- Use noexcept for functions that never throw
-- Implement transaction-like operations for multi-step changes
-- Test exception safety of your code
-
-Exception Handling Best Practices:
-- Catch by const reference
-- Catch most specific exceptions first
-- Never let exceptions escape destructors
-- Use smart pointers and RAII containers
-- Document exception specifications
-
-Modern C++ Exception Safety Features:
-- std::unique_ptr and std::shared_ptr for automatic cleanup
-- Container operations with strong guarantees
-- noexcept specifications for optimization
-- std::optional for operations that might fail
-- RAII everywhere for exception safety
-
-Exception safety demonstration completed!
-```
-
 ## Key Components
 
 ### 1. Exception Safety Guarantees
@@ -166,7 +41,7 @@ Exception safety demonstration completed!
 - **No-Throw Guarantee:** Operations never throw exceptions
 
 ### 2. RAII (Resource Acquisition Is Initialization)
-- **Automatic Cleanup:** Resources are cleaned up in destructors
+- **Automatic Cleanup:** Resources are cleaned up in destructors and going out of scope
 - **Exception Safety:** Resources are properly released even when exceptions occur
 - **Stack Unwinding:** Destructors are called during exception propagation
 
@@ -460,6 +335,46 @@ public:
 | Error Codes | Manual | Low | Low |
 | std::optional | High | Low | Medium |
 | std::expected | High | Low | Medium |
+
+## Exceptionless Programming Patterns
+
+In embedded or real-time environments where exceptions are disabled (e.g., `-fno-exceptions`), standard exception handling mechanisms are unavailable. This poses a challenge for constructors, which strictly have no return value and typically rely on exceptions to signal failure.
+
+### The Problem: Constructor Failures
+If a constructor encounters an error (e.g., hardware initialization failure) and cannot throw, the object might be left in a "half-baked" or invalid state ("zombie object"). 
+Throwing exception from a destructor is undefined behavior. If an exception is thrown during stack unwinding (e.g., during cleanup after another exception), the program will terminate.
+
+### The Solution: Factory Pattern
+To handle this safely without exceptions, use a static **Factory Method** that returns a type capable of attempting construction and reporting success or failure.
+
+#### Option A: `std::optional` (Success/Failure)
+Make the constructor private and expose a `static std::optional<T> create()` method.
+
+```cpp
+class HardwareInterface {
+    // Private constructor prevents direct instantiation
+    HardwareInterface() { /* ... */ } 
+public:
+    static std::optional<HardwareInterface> create() {
+        if (!init_hardware()) return std::nullopt;
+        return HardwareInterface();
+    }
+};
+```
+
+#### Option B: `std::expected` (Rich Error Reporting - C++23)
+Use `std::expected<T, E>` to return either the valid object or a specific error code. This is often preferred in modern C++ as it enforces error checking (the "expected" value cannot be accessed without checking validity).
+
+```cpp
+class HardwareInterface {
+    HardwareInterface() { /* ... */ } // Private constructor
+public:
+    static std::expected<HardwareInterface, HardwareError> create() {
+        if (!init_hardware()) return std::unexpected(HardwareError::InitFailed);
+        return HardwareInterface();
+    }
+};
+```
 
 ## Advanced Usage Patterns
 
