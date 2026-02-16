@@ -181,3 +181,5 @@ tramp
 test_output/
 *.test
 *.txt
+test1.txt_assigned
+test1.txt_copy

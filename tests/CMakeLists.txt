@@ -31,6 +31,7 @@ add_executable(unit_tests test.cpp
     ../src/24_ThreeWayComparison/ThreeWayComparisonSample.cpp
     ../src/25_Projections/ProjectionsSample.cpp
     ../src/26_InputOutputStream/InputOutputStreamSample.cpp
+    ../src/27_RTTI/RTTISample.cpp
 )
 
 # Enable strict compile warnings for tests

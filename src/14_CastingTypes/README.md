@@ -137,6 +137,7 @@ This sample demonstrates:
 - Navigating inheritance hierarchies (up/down casting when you know the type)
 - Converting void* back to original pointer type
 - Converting between related pointer types
+- When casting from void* to another pointer type `static_cast` is sufficient this way whenever the actual type of void* is changed `static_cast` allows you to catch that in compile time.
 
 ### ✅ **Use dynamic_cast when:**
 - You need runtime type checking for polymorphic objects
@@ -146,11 +147,13 @@ This sample demonstrates:
 ### ⚠️ **Use const_cast when:**
 - Calling legacy APIs that don't respect const-correctness
 - You absolutely know the data isn't modified (rare)
+- When you need to add or remove const/volatile qualifiers
 
 ### ❌ **Use reinterpret_cast when:**
 - Working with hardware/OS interfaces
 - Implementing low-level data structures
 - You really know what you're doing (avoid if possible)
+- Watchout while using reinterpret_cast with pointers to objects of different types
 
 ### ✅ **Use std::bit_cast when:**
 - You need to reinterpret bits safely
@@ -323,6 +326,11 @@ Dog* dog = dynamic_cast<Dog*>(animal);  // Safe
 ```
 
 ### 2. Modifying Const Data
+**When it is INVALID (Undefined Behavior)**
+If the original object was declared as const, modifying it after a const_cast results in Undefined ehavior (UB).
+
+Even if the compiler allows the code to compile and it seems to "work" in some cases, the compiler is free to optimize based on the assumption that const data never changes. It might store the value in read-only memory (like the .rodata section), or it might inline the initial value everywhere, leading to inconsistent results.
+
 ```cpp
 // Wrong: Modifying truly const data
 const int value = 42;
@@ -334,7 +342,19 @@ int mutable_value = 42;
 const int* const_ptr = &mutable_value;
 int* mutable_ptr = const_cast<int*>(const_ptr);  // OK
 ```
+**When it is VALID**
+Modifying the data is perfectly valid if the original object was not const, but you are currently accessing it through a const pointer or reference.
 
+This scenario often occurs when passing a mutable object to a function that accepts a const reference (perhaps for legacy API reasons or bad design), and you need to cast that const away to modify it.
+
+```cpp
+// Valid: Modifying non-const data through const pointer
+int mutable_value = 42;
+const int* const_ptr = &mutable_value;
+int* mutable_ptr = const_cast<int*>(const_ptr);  // OK
+*mutable_ptr = 100;  // Valid
+```
+> If you have a class member that needs to be modified inside a const member function (like a mutex or a cache), use the `mutable` keyword instead of `const_cast`.
 ### 3. Unsafe reinterpret_cast
 ```cpp
 // Wrong: Unchecked reinterpretation

@@ -21,6 +21,7 @@ In the following code section the wrapper class `Wrapper` can hold any type that
 
 ```cpp
 // Concept (interface)
+// Declare the operation that objects of different types must implement
 struct Concept {
     virtual ~Concept() = default;
     virtual void operation() = 0;
@@ -28,6 +29,7 @@ struct Concept {
 };
 
 // Model template (implementation for any type)
+// Implement the Concept interface for a specific type
 template <typename T>
 struct Model : Concept {
     T object_;
@@ -39,6 +41,7 @@ struct Model : Concept {
 
 // Wrapper (type-erased interface)
 class Wrapper {
+    // Use the Concept interface to store and access objects of different types
     std::unique_ptr<Concept> pimpl_;
 public:
     template <typename T>
@@ -53,6 +56,15 @@ w1.operation();
 Wrapper w2 = AnotherType{};
 w2.operation();
 
+// Using in a container
+std::vector<Wrapper> wrappers;
+wrappers.push_back(SomeType{});
+wrappers.push_back(AnotherType{});
+
+for (const auto& wrapper : wrappers) {
+    wrapper.operation();
+}
+
 // Usage with clone
 // The copy constructor uses the clone method to create a deep copy of the underlying object.
 // This ensures that the new Wrapper instance owns its own separate copy of the contained object,
@@ -61,8 +73,6 @@ w2.operation();
 // unintended sharing of state.
 Wrapper w3 = w1;  // Copy constructor uses clone
 w3.operation();
-
-
 ```
 
 ### Other examples of Type Erasure

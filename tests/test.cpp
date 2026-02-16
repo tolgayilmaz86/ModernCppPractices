@@ -24,6 +24,8 @@
 #include "24_ThreeWayComparison/ThreeWayComparisonSample.hpp"
 #include "25_Projections/ProjectionsSample.hpp"
 #include "26_InputOutputStream/InputOutputStreamSample.hpp"
+#include "27_RTTI/RTTISample.hpp"
+
 #include <gtest/gtest.h>
 
 TEST(Samples, RAII) {
@@ -180,6 +182,12 @@ TEST(Samples, Projections) {
 TEST(Samples, InputOutputStream) {
   InputOutputStreamSample sample;
   // This will run the Input/Output Stream Extensions demonstration
+  sample.run();
+}
+
+TEST(Samples, RTTI) {
+  RTTISample sample;
+  // This will run the RTTI demonstration
   sample.run();
 }
 
