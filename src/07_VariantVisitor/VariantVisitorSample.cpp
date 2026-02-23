@@ -20,6 +20,51 @@ namespace {
 using ShapeVariant = std::variant<std::monostate, double, int, std::string>;
 
 // ============================================================================
+// Example 1a: Real-World Image Saving Example (from cpp-for-yourself)
+// ============================================================================
+
+// This example demonstrates how std::variant enables dynamic polymorphism
+// with value semantics - no inheritance or heap allocation required!
+
+struct PngImage {
+    void Save(const std::string& file_name) const {
+        std::cout << "Saving " << file_name << ".png\n";
+    }
+    // Some private image data would go here.
+};
+
+struct JpegImage {
+    void Save(const std::string& file_name) const {
+        std::cout << "Saving " << file_name << ".jpg\n";
+    }
+    // Some private image data would go here.
+};
+
+// This alias is only here for convenience.
+using Image = std::variant<PngImage, JpegImage>;
+
+void SaveImage(const Image& image, const std::string& file_name) {
+    std::visit([&](const auto& img) { img.Save(file_name); }, image);
+}
+
+// ============================================================================
+// Example 1b: Non-Default-Constructible Types with std::monostate
+// ============================================================================
+
+// This type cannot be default-constructed
+struct NonDefaultConstructibleType {
+    int value;
+    NonDefaultConstructibleType(int v) : value(v) {}
+    // No default constructor!
+};
+
+// Without std::monostate, this would fail to compile:
+// std::variant<NonDefaultConstructibleType, int, double> v{};  // ERROR!
+
+// With std::monostate as the first type, it works:
+using SafeVariant = std::variant<std::monostate, NonDefaultConstructibleType, int, double>;
+
+// ============================================================================
 // Example 2: Visitor Pattern with std::visit
 // ============================================================================
 
@@ -192,6 +237,97 @@ void demonstrateVariantVisitor() {
 }
 
 // ============================================================================
+// Example 6a: Image Saving with Variant (Real-World Example)
+// ============================================================================
+
+void demonstrateImageSaving() {
+    std::cout << "\n=== Image Saving with Variant (Value Semantics) ===" << std::endl;
+    
+    // Just as before, this can happen at runtime.
+    // We can store different image types in a vector without inheritance!
+    const std::vector<Image> images = {PngImage{}, JpegImage{}};
+    
+    for (const auto& image : images) {
+        SaveImage(image, "output");
+    }
+    
+    std::cout << "\nKey insight: We achieved dynamic polymorphism with:" << std::endl;
+    std::cout << "- No inheritance hierarchy" << std::endl;
+    std::cout << "- No heap allocation (value semantics)" << std::endl;
+    std::cout << "- No virtual function overhead" << std::endl;
+    std::cout << "- Type-safe at compile time" << std::endl;
+}
+
+// ============================================================================
+// Example 6b: Non-Default-Constructible Types
+// ============================================================================
+
+void demonstrateMonostate() {
+    std::cout << "\n=== std::monostate for Non-Default-Constructible Types ===" << std::endl;
+    
+    // SafeVariant can be default-constructed because std::monostate is first
+    SafeVariant v{};  // Holds std::monostate
+    
+    std::cout << "Default-constructed variant holds monostate: " 
+              << std::holds_alternative<std::monostate>(v) << std::endl;
+    
+    // We can still assign other types
+    v = NonDefaultConstructibleType{42};
+    std::cout << "After assignment, holds NonDefaultConstructibleType: "
+              << std::holds_alternative<NonDefaultConstructibleType>(v) << std::endl;
+    
+    // Visit with proper handling of monostate
+    auto visitor = overloaded{
+        [](std::monostate) { std::cout << "Empty (monostate)" << std::endl; },
+        [](const NonDefaultConstructibleType& t) { 
+            std::cout << "NonDefaultConstructibleType with value: " << t.value << std::endl; 
+        },
+        [](int i) { std::cout << "int: " << i << std::endl; },
+        [](double d) { std::cout << "double: " << d << std::endl; }
+    };
+    
+    std::visit(visitor, v);
+    
+    v = std::monostate{};  // Reset to empty
+    std::visit(visitor, v);
+    
+    std::cout << "\nstd::monostate is useful when:" << std::endl;
+    std::cout << "- First type in variant is not default-constructible" << std::endl;
+    std::cout << "- You want to represent an 'empty' or 'unset' state" << std::endl;
+    std::cout << "- Similar to std::nullopt for std::optional" << std::endl;
+}
+
+// ============================================================================
+// Example 6c: Storing and Getting Values
+// ============================================================================
+
+void demonstrateStoringAndGetting() {
+    std::cout << "\n=== Storing and Getting Values from Variant ===" << std::endl;
+    
+    std::variant<int, std::string> value{};
+    
+    // By default, variant stores a value of the first type
+    std::cout << std::boolalpha;
+    std::cout << "Holds integer: " << std::holds_alternative<int>(value) << std::endl;
+    std::cout << "Holds string: " << std::holds_alternative<std::string>(value) << std::endl;
+    std::cout << "Integer: " << std::get<int>(value) << std::endl;
+    std::cout << "Integer by index: " << std::get<0>(value) << std::endl;
+    
+    value = "Hello, variant!";  // value now holds a string
+    std::cout << "\nAfter assigning string:" << std::endl;
+    std::cout << "Holds integer: " << std::holds_alternative<int>(value) << std::endl;
+    std::cout << "Holds string: " << std::holds_alternative<std::string>(value) << std::endl;
+    std::cout << "String: " << std::get<std::string>(value) << std::endl;
+    std::cout << "String by index: " << std::get<1>(value) << std::endl;
+    
+    value = 42;  // value holds an int
+    std::cout << "\nAfter assigning int:" << std::endl;
+    std::cout << "Holds integer: " << std::holds_alternative<int>(value) << std::endl;
+    std::cout << "Integer: " << std::get<int>(value) << std::endl;
+    std::cout << "Integer by index: " << std::get<0>(value) << std::endl;
+}
+
+// ============================================================================
 // Example 7: Multiple Visitors on Same Data
 // ============================================================================
 
@@ -321,6 +457,43 @@ void demonstrateAdvancedLambdas() {
 }
 
 // ============================================================================
+// Example 11: Overloaded with auto Catch-All
+// ============================================================================
+
+void demonstrateOverloadedWithCatchAll() {
+    std::cout << "\n=== Overloaded Pattern with auto Catch-All ===\n";
+    
+    // Using auto to catch any types we don't want to handle explicitly
+    // but if we DO decide to handle them explicitly, those implementations are preferred
+    
+    std::variant<std::monostate, int, std::string, double> value{};
+    
+    const auto visitor = overloaded{
+        [](auto) { std::cout << "Unknown type (catch-all)\n"; },  // Catch-all for unhandled types
+        [](int arg) { std::cout << "Int: " << arg << '\n'; },
+        [](const std::string& arg) { std::cout << "String: " << arg << '\n'; }
+    };
+    
+    std::cout << "Visiting monostate (caught by auto): ";
+    std::visit(visitor, value);
+    
+    value = "Hello, variant!";
+    std::cout << "Visiting string (explicit handler): ";
+    std::visit(visitor, value);
+    
+    value = 42;
+    std::cout << "Visiting int (explicit handler): ";
+    std::visit(visitor, value);
+    
+    value = 3.14;
+    std::cout << "Visiting double (caught by auto): ";
+    std::visit(visitor, value);
+    
+    std::cout << "\nThe auto lambda acts as a catch-all for types without explicit handlers." << std::endl;
+    std::cout << "Explicit handlers take precedence over the auto catch-all." << std::endl;
+}
+
+// ============================================================================
 // Example 11: Variant vs Inheritance Performance Comparison
 // ============================================================================
 
@@ -427,6 +600,15 @@ void VariantVisitorSample::run() {
     // demonstrateInheritanceVariant();  // Disabled due to heap allocation issue
     demonstrateVariantVisitor();
 
+    // Image saving example (real-world use case)
+    demonstrateImageSaving();
+
+    // std::monostate for non-default-constructible types
+    demonstrateMonostate();
+
+    // Storing and getting values
+    demonstrateStoringAndGetting();
+
     // Multiple visitors
     demonstrateMultipleVisitors();
 
@@ -438,6 +620,9 @@ void VariantVisitorSample::run() {
 
     // Advanced lambdas
     demonstrateAdvancedLambdas();
+
+    // Overloaded with auto catch-all
+    demonstrateOverloadedWithCatchAll();
 
     // Performance comparison
     demonstratePerformanceComparison();
