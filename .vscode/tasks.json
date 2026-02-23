@@ -105,6 +105,7 @@
             "label": "C/C++: clang++.exe build active file",
             "command": "C:\\Program Files\\LLVM\\bin\\clang++.exe",
             "args": [
+                "-std=c++23",
                 "-fcolor-diagnostics",
                 "-fansi-escape-codes",
                 "-g",
