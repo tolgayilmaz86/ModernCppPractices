@@ -33,6 +33,7 @@
 #include "25_Projections/ProjectionsSample.hpp"
 #include "26_InputOutputStream/InputOutputStreamSample.hpp"
 #include "27_RTTI/RTTISample.hpp"
+#include "28_TemplateMeta/TMPSample.hpp"
 
 int main(int argc, char* argv[]) {
     auto& registry = SampleRegistry::instance();

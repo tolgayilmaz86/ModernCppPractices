@@ -25,6 +25,7 @@
 #include "25_Projections/ProjectionsSample.hpp"
 #include "26_InputOutputStream/InputOutputStreamSample.hpp"
 #include "27_RTTI/RTTISample.hpp"
+#include "28_TemplateMeta/TMPSample.hpp"
 
 #include <gtest/gtest.h>
 
@@ -188,6 +189,12 @@ TEST(Samples, InputOutputStream) {
 TEST(Samples, RTTI) {
   RTTISample sample;
   // This will run the RTTI demonstration
+  sample.run();
+}
+
+TEST(Samples, TemplateMeta) {
+  TMPSample sample;
+  // This will run the Template Meta Programming demonstration
   sample.run();
 }
 
