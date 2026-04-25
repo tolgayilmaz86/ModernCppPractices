@@ -470,6 +470,236 @@ void TMPSample::demonstrate_cpp20_tmp() {
 }
 
 // =============================================================================
+// 9. MACROS vs. TEMPLATES — replacing the preprocessor with type-safe code
+// =============================================================================
+
+// ----- 9a. Object-like macros → constexpr variables -------------------------
+// BAD:  #define MAX_SIZE 1024
+// GOOD:
+inline constexpr std::size_t MAX_SIZE = 1024;
+
+// BAD:  #define PI 3.14159265358979
+// GOOD:
+template <typename T = double>
+inline constexpr T PI_v = static_cast<T>(3.14159265358979323846L);
+
+// ----- 9b. Function-like macros → inline / constexpr templates --------------
+// BAD:  #define SQUARE(x) ((x)*(x))   // no type safety, evaluates x twice
+// GOOD:
+template <typename T>
+constexpr T tmpl_square(T x) noexcept { return x * x; }
+
+// BAD:  #define MAX(a,b) ((a)>(b)?(a):(b))
+// GOOD: std::max (already in <algorithm>), or a constrained version:
+template <typename T>
+requires std::totally_ordered<T>
+constexpr T tmpl_max(T a, T b) noexcept { return a > b ? a : b; }
+
+// BAD:  #define ABS(x) ((x)<0?-(x):(x))
+// GOOD:
+template <typename T>
+requires std::is_arithmetic_v<T>
+constexpr T tmpl_abs(T x) noexcept { return x < T{} ? -x : x; }
+
+// ----- 9c. Logging/debug macros → variadic template + source_location -------
+// BAD:  #define LOG(fmt, ...) printf("[%s:%d] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+// GOOD (C++20): std::source_location is a first-class type, not a macro trick
+#include <source_location>
+
+template <typename... Args>
+void tmpl_log(std::string_view fmt,
+              Args&&... args,
+              const std::source_location loc = std::source_location::current())
+{
+    std::cout << "[" << loc.file_name() << ":" << loc.line() << "] ";
+    // Simple substitution — in production use std::format (C++20)
+    std::cout << fmt;
+    if constexpr (sizeof...(args) > 0) {
+        std::cout << " (";
+        ((std::cout << args << " "), ...);
+        std::cout << ")";
+    }
+    std::cout << "\n";
+}
+
+// ----- 9d. Type-safe printf → variadic template -----------------------------
+// BAD:  printf("%d %s", value, str)  — no compile-time type check
+// GOOD: a simple type-safe printer
+template <typename T>
+void safe_printf_impl(std::ostream& out, std::string_view fmt, const T& head) {
+    // Find next {} placeholder
+    auto pos = fmt.find("{}");
+    if (pos != std::string_view::npos) {
+        out << fmt.substr(0, pos) << head;
+        // print remainder without substitution
+        out << fmt.substr(pos + 2);
+    } else {
+        out << fmt;
+    }
+}
+
+template <typename T, typename... Rest>
+void safe_printf_impl(std::ostream& out, std::string_view fmt, const T& head, const Rest&... rest) {
+    auto pos = fmt.find("{}");
+    if (pos != std::string_view::npos) {
+        out << fmt.substr(0, pos) << head;
+        safe_printf_impl(out, fmt.substr(pos + 2), rest...);
+    } else {
+        out << fmt;
+    }
+}
+
+template <typename... Args>
+void safe_printf(std::string_view fmt, Args&&... args) {
+    safe_printf_impl(std::cout, fmt, std::forward<Args>(args)...);
+    std::cout << "\n";
+}
+
+// ----- 9e. Boilerplate generation macros → CRTP + variadic templates --------
+// BAD:  #define DECLARE_SINGLETON(T)  ...copy-paste boilerplate...
+// GOOD: CRTP mixin
+template <typename Derived>
+class Singleton {
+public:
+    static Derived& instance() {
+        static Derived inst;
+        return inst;
+    }
+protected:
+    Singleton()  = default;
+    ~Singleton() = default;
+private:
+    Singleton(const Singleton&)            = delete;
+    Singleton& operator=(const Singleton&) = delete;
+};
+
+// BAD:  #define MAKE_COMPARABLE(T)  bool operator==(const T&) const; ...
+// GOOD: CRTP mixin that injects comparison operators
+template <typename Derived>
+struct Comparable {
+    bool operator!=(const Derived& o) const noexcept {
+        return !static_cast<const Derived*>(this)->operator==(o);
+    }
+    bool operator<=(const Derived& o) const noexcept {
+        return !(o < *static_cast<const Derived*>(this));
+    }
+    bool operator>=(const Derived& o) const noexcept {
+        return !(*static_cast<const Derived*>(this) < o);
+    }
+    bool operator>(const Derived& o) const noexcept {
+        return o < *static_cast<const Derived*>(this);
+    }
+};
+
+struct Temperature : Comparable<Temperature> {
+    double celsius;
+    explicit Temperature(double c) : celsius(c) {}
+    bool operator==(const Temperature& o) const noexcept { return celsius == o.celsius; }
+    bool operator< (const Temperature& o) const noexcept { return celsius <  o.celsius; }
+};
+
+// ----- 9f. Compilation-flag macros → if constexpr / concepts ---------------
+// BAD:
+//   #ifdef ENABLE_LOGGING
+//       log("...");
+//   #endif
+// GOOD: a compile-time policy flag with zero overhead when disabled
+template <bool Enabled>
+struct Logger {
+    template <typename... Args>
+    static void log([[maybe_unused]] std::string_view msg,
+                    [[maybe_unused]] Args&&... args) {
+        if constexpr (Enabled) {
+            std::cout << "[LOG] " << msg;
+            ((std::cout << " " << args), ...);
+            std::cout << "\n";
+        }
+        // When Enabled == false the entire body is elided — no runtime cost
+    }
+};
+
+using ReleaseLogger = Logger<false>;
+using DebugLogger   = Logger<true>;
+
+// ----- 9g. static_assert as a better ASSERT macro ---------------------------
+// BAD:  #define STATIC_ASSERT(cond) typedef char _sa[(cond)?1:-1]
+// GOOD:
+template <typename T>
+constexpr void require_trivially_copyable() {
+    static_assert(std::is_trivially_copyable_v<T>,
+                  "T must be trivially copyable for this buffer");
+}
+
+void TMPSample::demonstrate_macros_vs_templates() {
+    std::cout << "\n=== Macros vs. Templates ===\n";
+
+    // 9a — constants
+    std::cout << "\n--- Constants ---\n";
+    std::cout << "MAX_SIZE           = " << MAX_SIZE        << "\n";
+    std::cout << "PI_v<double>       = " << PI_v<double>    << "\n";
+    std::cout << "PI_v<float>        = " << PI_v<float>     << "\n"; // narrowed safely
+    static_assert(MAX_SIZE == 1024);
+
+    // 9b — function-like
+    std::cout << "\n--- Function-like macros ---\n";
+    std::cout << "tmpl_square(5)     = " << tmpl_square(5)    << "\n";
+    std::cout << "tmpl_square(3.14)  = " << tmpl_square(3.14) << "\n";
+    std::cout << "tmpl_max(3,7)      = " << tmpl_max(3,7)     << "\n";
+    std::cout << "tmpl_abs(-42.5)    = " << tmpl_abs(-42.5)   << "\n";
+    // Macro pitfall avoided: tmpl_square(x++) evaluates x++ exactly once
+    int x = 4;
+    int r = tmpl_square(x++);
+    std::cout << "tmpl_square(x++) with x=4: result=" << r
+              << ", x after=" << x << " (x++ evaluated once)\n";
+
+    // 9c — logging via source_location
+    std::cout << "\n--- Logging with source_location ---\n";
+    tmpl_log("TMPSample demo running");
+    tmpl_log("values:", 42, 3.14, "hello");
+
+    // 9d — type-safe printf
+    std::cout << "\n--- Type-safe printf ---\n";
+    safe_printf("Hello, {}! You are {} years old.", std::string("World"), 30);
+    safe_printf("{} + {} = {}", 1, 2, 3);
+
+    // 9e — boilerplate via CRTP
+    std::cout << "\n--- Boilerplate via CRTP ---\n";
+    Temperature t1{20.0}, t2{37.0}, t3{20.0};
+    std::cout << "t1(20) < t2(37): " << (t1 < t2)  << "\n";
+    std::cout << "t1(20) > t2(37): " << (t1 > t2)  << "\n";
+    std::cout << "t1(20) == t3(20): " << (t1 == t3) << "\n";
+    std::cout << "t1(20) != t2(37): " << (t1 != t2) << "\n";
+    std::cout << "t2(37) >= t1(20): " << (t2 >= t1) << "\n";
+    // All operators came free from the CRTP mixin — no macro boilerplate!
+
+    // 9f — compilation flag policy
+    std::cout << "\n--- Compilation-flag policy (if constexpr Logger) ---\n";
+    DebugLogger::log("debug build message", "extra=", 99);
+    ReleaseLogger::log("this is completely elided");  // zero cost
+    std::cout << "ReleaseLogger::log() emits no output (and no instructions)\n";
+
+    // 9g — static_assert
+    std::cout << "\n--- static_assert as ASSERT macro ---\n";
+    require_trivially_copyable<int>();
+    require_trivially_copyable<double>();
+    std::cout << "int and double pass trivially-copyable check\n";
+    // require_trivially_copyable<std::string>(); // would be a compile error
+
+    // Summary table
+    std::cout << "\n+-------------------------+-----------------------------------+\n";
+    std::cout << "| Macro pattern           | Template replacement               |\n";
+    std::cout << "+-------------------------+-----------------------------------+\n";
+    std::cout << "| #define CONST 42        | constexpr / inline constexpr      |\n";
+    std::cout << "| #define FN(x) expr      | template<T> constexpr T fn(T x)   |\n";
+    std::cout << "| #define LOG(fmt,...)    | variadic template + source_location|\n";
+    std::cout << "| printf(\"%d\",v)           | safe_printf({}, v)                |\n";
+    std::cout << "| #define BOILERPLATE(T)  | CRTP mixin template               |\n";
+    std::cout << "| #ifdef FLAG / #endif    | if constexpr / Logger<bool>       |\n";
+    std::cout << "| STATIC_ASSERT hack      | static_assert / Concepts          |\n";
+    std::cout << "+-------------------------+-----------------------------------+\n";
+}
+
+// =============================================================================
 // run() — entry point
 // =============================================================================
 
@@ -486,6 +716,7 @@ void TMPSample::run() {
     demonstrate_template_specialization();
     demonstrate_sfinae_vs_concepts();
     demonstrate_cpp20_tmp();
+    demonstrate_macros_vs_templates();
 
     std::cout << "\n=== TMP Summary ===\n";
     std::cout << "Template Meta Programming moves computation from runtime to compile time.\n";
@@ -498,6 +729,7 @@ void TMPSample::run() {
     std::cout << "  - Template specialization for type-specific behavior\n";
     std::cout << "  - SFINAE / Concepts for constraining templates\n";
     std::cout << "  - C++20: consteval, NTTPs, template lambdas\n";
+    std::cout << "  - Templates as a type-safe, debuggable macro replacement\n";
     std::cout << "\nTMP demonstration completed!\n";
 }
 

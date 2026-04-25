@@ -11,6 +11,7 @@ vcpkg/
 packages/
 downloads/
 buildtrees/
+.cache/
 
 # Compiled Object files
 *.slo

@@ -17,4 +17,5 @@ private:
     void demonstrate_template_specialization();
     void demonstrate_sfinae_vs_concepts();
     void demonstrate_cpp20_tmp();
+    void demonstrate_macros_vs_templates();
 };

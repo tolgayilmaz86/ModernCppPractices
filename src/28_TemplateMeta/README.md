@@ -26,7 +26,7 @@ There are three generations of TMP idioms in C++:
 |-----|-----------|
 | C++98/03 | Recursive struct templates, full/partial specialisation |
 | C++11/14 | `constexpr`, variadic templates, `type_traits`, variable templates |
-| C++17 | `if constexpr`, fold expressions, CTAD |
+| C++17 | `if constexpr`, fold expressions, CTAD(Class Template Argument Deduction) |
 | C++20 | Concepts, `consteval`, relaxed NTTPs, template lambdas |
 
 ---
@@ -128,15 +128,19 @@ static_assert(pack_size<int, double, char>() == 3);
 **Index sequences** unlock tuple access:
 
 ```cpp
+// C++14
 template <std::size_t... Is, typename Tuple>
 void print_tuple_impl(std::index_sequence<Is...>, const Tuple& t) {
     ((std::cout << std::get<Is>(t) << " "), ...);
 }
 
+// C++17
 template <typename... Ts>
 void print_tuple(const std::tuple<Ts...>& t) {
     print_tuple_impl(std::index_sequence_for<Ts...>{}, t);
 }
+
+print_tuple(std::make_tuple(1, 2.5, 'c', "hello")); // 1 2.5 c hello
 ```
 
 ---
@@ -146,6 +150,13 @@ void print_tuple(const std::tuple<Ts...>& t) {
 `if constexpr` selects a branch **at compile time**. The discarded branch is not instantiated, so it can contain code that would be ill-formed for other types — eliminating the need for multiple overloads.
 
 ```cpp
+// Old way:
+template <typename T, typename = void>
+struct SFINAE_describe : std::false_type {};
+template <typename T>
+struct SFINAE_describe<T, std::enable_if_t<std::is_integral_v<T>>> : std::true_type {};
+
+// C++17
 template <typename T>
 std::string describe(const T& v) {
     if constexpr (std::is_integral_v<T>) {
@@ -158,6 +169,7 @@ std::string describe(const T& v) {
 }
 // describe(42)   → "integer: 42"
 // describe(3.14) → "float: 3.140000"
+// describe(std::string("hello")) → "other"
 ```
 
 **Before C++17:** you would need tag dispatch or explicit specialisations for every combination.
@@ -173,19 +185,29 @@ Fold expressions collapse a parameter pack with a binary operator in one concise
 template <typename... Args>
 auto sum(Args... args) { return (... + args); }
 
+sum(1, 2, 3, 4, 5);  // 15
+
 // Right fold: (1 * (2 * (3 * 4)))
 template <typename... Args>
 auto product(Args... args) { return (args * ...); }
 
+product(1, 2, 3, 4, 5);  // 120
+
 // Binary fold with initial value
 template <typename... Args>
 auto sum_from(int init, Args... args) { return (init + ... + args); }
+
+sum_from(1, 2, 3, 4, 5);  // 15
 
 // Practical: push all elements at once
 template <typename T, typename... Args>
 void push_all(std::vector<T>& v, Args&&... args) {
     (v.push_back(std::forward<Args>(args)), ...);
 }
+
+std::vector<int> v;
+push_all(v, 1, 2, 3, 4, 5);  // v now contains 1, 2, 3, 4, 5
+
 ```
 
 **Four fold forms:**
@@ -201,7 +223,11 @@ void push_all(std::vector<T>& v, Args&&... args) {
 
 ### 6. Template Specialisation
 
-Specialisation lets you provide a **type-specific** implementation while keeping a generic primary template.
+Specialisation lets you provide a **type-specific** implementation while keeping a generic primary template. It is useful for:
+
+- Optimizing for specific types
+- Adding new capabilities to existing template
+- Partial specialisation for categories of types
 
 ```cpp
 // Primary template
@@ -325,6 +351,7 @@ struct Circle {
 };
 
 Circle<3.14159265358979> c;
+c.area(1.0); // 3.14159265358979
 ```
 
 #### Template Lambdas (C++20)
@@ -352,6 +379,205 @@ constexpr int factorial(int n) {
     }
 }
 ```
+
+---
+
+### 9. Macros vs. Templates — replacing the preprocessor
+
+Preprocessor macros predate the template system and have well-known problems: no type safety, no scoping, no debugging, and subtle pitfalls with multiple evaluation. Modern C++ templates solve every one of these.
+
+#### 9a. Object-like macros → `constexpr` / variable templates
+
+```cpp
+// BAD — no type, no scope, replaces text blindly
+#define MAX_SIZE 1024
+#define PI 3.14159265358979
+
+// GOOD — typed, scoped, usable in debuggers
+inline constexpr std::size_t MAX_SIZE = 1024;
+
+template <typename T = double>          // precision chosen at call site
+inline constexpr T PI_v = static_cast<T>(3.14159265358979323846L);
+
+double area = PI_v<double> * r * r;     // full precision
+float  area = PI_v<float>  * r * r;     // narrowed safely & explicitly
+```
+
+#### 9b. Function-like macros → `constexpr` / `inline` templates
+
+The classic macro pitfall: `#define SQUARE(x) x*x` evaluates `x` **twice**, so `SQUARE(i++)` corrupts `i`.
+
+```cpp
+// BAD
+#define SQUARE(x) ((x)*(x))     // SQUARE(i++) → i++ * i++  (UB!)
+#define MAX(a,b)  ((a)>(b)?(a):(b))
+#define ABS(x)    ((x)<0?-(x):(x))
+
+// GOOD — evaluated once, type-safe, inlined by the compiler
+template <typename T>
+constexpr T tmpl_square(T x) noexcept { return x * x; }
+
+template <typename T>
+requires std::totally_ordered<T>
+constexpr T tmpl_max(T a, T b) noexcept { return a > b ? a : b; }
+
+template <typename T>
+requires std::is_arithmetic_v<T>
+constexpr T tmpl_abs(T x) noexcept { return x < T{} ? -x : x; }
+
+int i = 4;
+int r = tmpl_square(i++);   // i++ evaluated once: r=16, i=5 ✓
+```
+
+#### 9c. Logging macros → variadic template + `std::source_location` (C++20)
+
+`__FILE__` and `__LINE__` are the main reason logging macros survived so long. C++20 renders them unnecessary.
+
+```cpp
+// BAD
+#define LOG(fmt, ...) printf("[%s:%d] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+
+// GOOD — std::source_location captures call site as a real type
+#include <source_location>
+
+template <typename... Args>
+void log(std::string_view msg,
+         Args&&... args,
+         const std::source_location loc = std::source_location::current())
+{
+    std::cout << '[' << loc.file_name() << ':' << loc.line() << "] "
+              << msg;
+    ((std::cout << ' ' << args), ...);
+    std::cout << '\n';
+}
+
+log("starting");              // [tmpsample.cpp:42] starting
+log("value:", 42, 3.14);      // [tmpsample.cpp:43] value: 42 3.14
+```
+
+#### 9d. `printf` → type-safe variadic template
+
+```cpp
+// BAD — runtime mismatch between format string and argument types
+printf("%d %s", some_int, some_string.c_str());
+
+// GOOD — all types resolved at compile time
+template <typename T, typename... Rest>
+void safe_printf_impl(std::ostream& out, std::string_view fmt,
+                      const T& head, const Rest&... rest) {
+    auto pos = fmt.find("{}");
+    out << fmt.substr(0, pos) << head;
+    safe_printf_impl(out, fmt.substr(pos + 2), rest...);
+}
+
+safe_printf("Hello {}! You are {} years old.", name, age);
+// → Hello Alice! You are 30 years old.
+// Passing wrong type? Caught at compile time, not at runtime.
+```
+
+> In C++20 use `std::format` / `std::print` instead — the same idea, standardised.
+
+#### 9e. Boilerplate macros → CRTP mixins
+
+Macros like `DECLARE_SINGLETON(T)` or `MAKE_COMPARABLE(T)` inject copy-pasted code. CRTP mixins inject behaviour through the type system, are debuggable, and compose naturally.
+
+```cpp
+// BAD
+#define MAKE_COMPARABLE(T)        \
+    bool operator!=(const T& o) const { return !(*this == o); } \
+    bool operator> (const T& o) const { return o < *this; }    \
+    bool operator<=(const T& o) const { return !(o < *this); } \
+    bool operator>=(const T& o) const { return !(*this < o); }
+
+// GOOD — one template mixin, reused by any type
+template <typename Derived>
+struct Comparable {
+    bool operator!=(const Derived& o) const noexcept {
+        return !static_cast<const Derived*>(this)->operator==(o); }
+    bool operator> (const Derived& o) const noexcept {
+        return o < *static_cast<const Derived*>(this); }
+    bool operator<=(const Derived& o) const noexcept {
+        return !(o < *static_cast<const Derived*>(this)); }
+    bool operator>=(const Derived& o) const noexcept {
+        return !(*static_cast<const Derived*>(this) < o); }
+};
+
+struct Temperature : Comparable<Temperature> {
+    double celsius;
+    bool operator==(const Temperature& o) const noexcept { return celsius == o.celsius; }
+    bool operator< (const Temperature& o) const noexcept { return celsius <  o.celsius; }
+};
+// Temperature now has all six comparison operators — zero macro paste.
+```
+
+#### 9f. Compilation-flag macros → `if constexpr` policy template
+
+`#ifdef`/`#endif` guards scatter conditional compilation across every call site and are invisible to the type system.
+
+```cpp
+// BAD — every call site must guard manually
+#ifdef ENABLE_LOGGING
+    log("value:", x);
+#endif
+
+// GOOD — zero-overhead when disabled, single point of control
+template <bool Enabled>
+struct Logger {
+    template <typename... Args>
+    static void log([[maybe_unused]] std::string_view msg,
+                    [[maybe_unused]] Args&&... args) {
+        if constexpr (Enabled) {          // branch eliminated when false
+            std::cout << "[LOG] " << msg;
+            ((std::cout << ' ' << args), ...);
+            std::cout << '\n';
+        }
+    }
+};
+
+using DebugLogger   = Logger<true>;
+using ReleaseLogger = Logger<false>;  // all log() calls compile to nothing
+
+DebugLogger::log("processing", item);   // printed in debug builds
+ReleaseLogger::log("processing", item); // completely elided
+```
+
+#### 9g. Assertion macros → `static_assert` + Concepts
+
+```cpp
+// BAD — C++03 hack
+#define STATIC_ASSERT(cond)  typedef char _static_assert_[(cond) ? 1 : -1]
+
+// GOOD — built-in, gives a human-readable message
+static_assert(sizeof(int) == 4, "This code requires 32-bit int");
+
+// BETTER — reusable template constraint
+template <typename T>
+constexpr void require_trivially_copyable() {
+    static_assert(std::is_trivially_copyable_v<T>,
+                  "T must be trivially copyable for use in this buffer");
+}
+
+require_trivially_copyable<int>();      // OK
+require_trivially_copyable<std::string>(); // compile error with clear message
+
+// BEST — C++20 Concept as a constraint, not just an assertion
+template <typename T>
+requires std::is_trivially_copyable_v<T>
+class FastBuffer { /* ... */ };
+```
+
+#### Summary — macro-to-template migration table
+
+| Macro pattern | C++ template replacement | Benefit |
+|---------------|--------------------------|---------|
+| `#define CONST value` | `inline constexpr T name` | Typed, scoped, debuggable |
+| `#define FN(x) expr` | `template<T> constexpr T fn(T x)` | Single evaluation, type-safe |
+| `#define MAX(a,b) ...` | `std::max` / `tmpl_max<T>` | No double-eval pitfall |
+| `#define LOG(fmt,...)` | variadic template + `source_location` | Scoped, typed, inspectable |
+| `printf("%d", v)` | `safe_printf("{}", v)` / `std::print` | Compile-time type check |
+| `#define BOILERPLATE(T)` | CRTP mixin template | Reusable, composable |
+| `#ifdef FLAG / #endif` | `if constexpr` / `Logger<bool>` | Zero overhead, single site |
+| `STATIC_ASSERT` hack | `static_assert` / Concepts | Clear messages, composable |
 
 ---
 
@@ -405,6 +631,42 @@ consteval ce_square(7) = 49
 CompileTimeDouble<3.14>::value = 3.14
 gen_adder<int>(3,4)     = 7
 
+=== Macros vs. Templates ===
+
+--- Constants ---
+MAX_SIZE           = 1024
+PI_v<double>       = 3.14159
+PI_v<float>        = 3.14159
+
+--- Function-like macros ---
+tmpl_square(5)     = 25
+tmpl_square(3.14)  = 9.8596
+tmpl_max(3,7)      = 7
+tmpl_abs(-42.5)    = 42.5
+tmpl_square(x++) with x=4: result=16, x after=5 (x++ evaluated once)
+
+--- Logging with source_location ---
+[TMPSample.cpp:600] TMPSample demo running
+[TMPSample.cpp:601] values: (42 3.14 hello )
+
+--- Type-safe printf ---
+Hello, World! You are 30 years old.
+1 + 2 = 3
+
+--- Boilerplate via CRTP ---
+t1(20) < t2(37): 1
+t1(20) > t2(37): 0
+t1(20) == t3(20): 1
+t1(20) != t2(37): 1
+t2(37) >= t1(20): 1
+
+--- Compilation-flag policy (if constexpr Logger) ---
+[LOG] debug build message extra= 99
+ReleaseLogger::log() emits no output (and no instructions)
+
+--- static_assert as ASSERT macro ---
+int and double pass trivially-copyable check
+
 TMP demonstration completed!
 ```
 
@@ -423,6 +685,11 @@ TMP demonstration completed!
 | Compile-time branching | `if constexpr` |
 | Behaviour policy injection | Policy-based design (template parameters) |
 | Type-specific overrides | Template specialisation |
+| Replacing `#define` constants | `inline constexpr` / variable templates |
+| Replacing function-like macros | `constexpr` / `inline` template functions |
+| Replacing logging macros | Variadic template + `std::source_location` |
+| Replacing `#ifdef` guards | `if constexpr` / policy template `<bool>` |
+| Replacing boilerplate macros | CRTP mixin templates |
 
 ### Performance
 
@@ -436,6 +703,8 @@ TMP demonstration completed!
 2. **Cryptic SFINAE errors** — switch to Concepts where possible (C++20).
 3. **Code bloat** — each unique template instantiation generates code; use explicit instantiation or `extern template` for common cases.
 4. **Over-engineering** — TMP is powerful but adds complexity. Prefer simple runtime solutions unless compile-time behaviour is genuinely needed.
+5. **Macro double-evaluation** — always replace function-like macros with templates; `#define SQUARE(x) x*x` with `x++` is undefined behaviour.
+6. **`#ifdef` drift** — conditional compilation blocks are invisible to the type system and hard to test; prefer `if constexpr` or policy templates.
 
 ---
 
@@ -446,6 +715,10 @@ TMP demonstration completed!
 3. **Use `if constexpr`** instead of multiple overloads for type-conditional behaviour.
 4. **Wrap traits in `_v`/`_t` aliases** (`is_foo_v`, `remove_foo_t`) for cleaner call sites.
 5. **Keep meta-programs simple** — if a meta-function is hard to read, refactor it.
+6. **Eliminate function-like macros** — replace every `#define FN(x)` with a typed `constexpr` / `inline` template.
+7. **Replace `#ifdef` blocks** with `if constexpr` or a `Logger<bool>`-style policy template.
+8. **Use `std::source_location`** (C++20) instead of `__FILE__`/`__LINE__` macros in logging helpers.
+9. **Use CRTP mixins** instead of `#define BOILERPLATE(T)` patterns for injecting repeated operator/interface code.
 
 ---
 
