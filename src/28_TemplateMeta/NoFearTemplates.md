@@ -96,6 +96,15 @@ Vec<double, 3> v3d;  // double precision for physics integration
 Vec<float, 2>  v2f;  // 2D UV coordinate
 ```
 
+```cpp
+template<typename T = float>
+T DegreesToRadians(T degrees) {
+    return degrees * static_cast<T>(0.01745329251994329577);
+}
+```
+
+Great for engine utility APIs where `float` is common but `double` is occasionally required.
+
 ---
 
 ## 1.5 · Argument Conversions
@@ -729,6 +738,42 @@ addComponent<Mesh>(entity, std::move(heavyMesh));  // explicit move
 
 The rule: use `T&&` + `std::forward<T>` in a deduced context when building *factory* or *emplace* style functions.
 
+Perfect forwarding preserves value category. If you pass an lvalue, it stays an lvalue; if you pass an rvalue, it stays an rvalue. This allows the called function to optimize for move semantics when possible, while still accepting lvalues without forcing unnecessary moves or copies.
+Use cases; wrappers for profiling, tracing, jobs, and command dispatch.
+
+You use `decltype(auto)` as the return type to perfectly forward the return value of the callable, preserving its value category (lvalue or rvalue) and const-qualification. This allows the wrapper function to be as transparent as possible, not interfering with move semantics or const-correctness of the original callable.
+
+```cpp
+template<typename Fn, typename... Args>
+decltype(auto) ProfileCall(Fn&& fn, Args&&... args) {
+    return std::forward<Fn>(fn)(std::forward<Args>(args)...);
+}
+// Usage
+ProfileCall([](int x) { return x * 2; }, 21); // returns 42, perfectly forwarding the lambda and its argument
+
+// In a more complex example, you might have a function that takes a callable and its arguments, and you want to forward them to another function that does the actual work, while also adding some profiling logic around it.
+template<typename Fn, typename... Args>
+decltype(auto) ProfileCall(Fn&& fn, Args&&... args) {
+    auto start = std::chrono::high_resolution_clock::now();
+    decltype(auto) result = std::forward<Fn>(fn)(std::forward<Args>(args)...);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::cout << "Call took " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
+    return result;
+}
+// Usage
+// returns 42 and prints the time taken to execute the lambda
+ProfileCall([](int x) { return x * 2; }, 21);
+
+// use regular functions as well
+int add(int a, int b) { return a + b; }
+ProfileCall(add, 10, 32); // returns 42 and prints the time taken to execute add(10, 32)
+
+// This pattern allows you to write generic profiling code
+// that can wrap any callable with any arguments, without 
+// losing the benefits of perfect forwarding.
+
+```
+
 ---
 
 # Section 4 — Template Changes in C++11
@@ -957,7 +1002,7 @@ Without `if constexpr`, you'd need separate overloads or tag dispatch for every 
 ## 5.4 · Fold Expressions (C++17)
 
 Apply a binary operator across all elements of a parameter pack.
-
+Used in debug consoles, telemetry, and diagnostics.
 | Syntax | Meaning |
 |--------|---------|
 | `(... op pack)` | Left fold: `((a op b) op c)` |
@@ -971,6 +1016,10 @@ template <typename... Required>
 bool World::hasAll(EntityId e) const {
     return (entityMask_[e.index()].test(ComponentId<Required>::value) && ...);
 }
+// Example usage:
+if (world.hasAll<Transform, Velocity>(entity)) {
+    // This entity has both Transform and Velocity components
+}
 
 // Register a system that requires a specific set of components
 template <typename... Components>
@@ -978,11 +1027,58 @@ void World::registerSystem(auto&& system) {
     auto view = query<Components...>(); // generates a typed view at compile time
     system.run(view);
 }
+// Example usage:
+world.registerSystem<Transform, Mesh>(renderSystem);
 
 // Sum all component weights — e.g. inventory mass calculation
 template <typename... Items>
 float totalMass(const Items&... items) {
     return (items.mass + ... + 0.0f);
+}
+// Example usage:
+float mass = totalMass(sword, shield, potion); // sums the mass of all items
+
+// Debug print all component types of an entity
+template <typename... Components>
+void debugPrint(EntityId e) {
+    std::cout << "Entity " << e.id() << " has components: ";
+    ((std::cout << typeid(Components).name() << " "), ...);
+    std::cout << "\n";
+}
+// Example usage:
+debugPrint<Transform, Velocity, Health>(entity);
+
+// Telemetry: log multiple values with a single call
+template <typename... Values>
+void logTelemetry(const Values&... vals) {
+    (log(vals), ...); // calls log() for each value
+}
+// Example usage:
+logTelemetry(player.position, player.health, player.score);
+
+// Diagnostics: check multiple conditions at once
+template <typename... Checks>
+bool allChecksPass(const Checks&... checks) {
+    return (checks() && ...); // calls each check and ANDs the results
+}
+// You can even limit Checks to be lambdas/functions that return bool, 
+// for better readability using concepts like this:
+concept BoolCheck = std::invocable<Checks> && // checks must be callable with no arguments
+                    std::same_as<std::invoke_result_t<Checks>, bool>; // checks must return bool
+template <BoolCheck... Checks>
+bool allChecksPass(const Checks&... checks) {
+    return (checks() && ...); // calls each check and ANDs the results
+}
+
+// Example usage:
+// Note that you can use regular if checks instead of lambdas if you prefer, 
+// but lambdas allow for more complex logic and better readability in this context.
+if (allChecksPass(
+    [] { return player.health > 0; },
+    [] { return !player.isInvulnerable(); },
+    [] { return enemyCount < 5; }
+)) {
+    // All conditions are met — safe to spawn more enemies
 }
 ```
 
@@ -1069,6 +1165,19 @@ RenderPass<SkyBlue>  dayPass;
 RenderPass<Midnight> nightPass;
 ```
 
+C++20 broadens what can be used as non-type template parameters.
+This can be used to create unique types based on values, which can be useful for things like type-safe identifiers or compile-time configuration like compile-time tags for messages/events/resources.
+
+```cpp  
+template<auto Id>
+struct Message {
+    static constexpr auto id = Id;
+    // message data and methods...
+};
+Message<42> msgA; // Message with ID 42
+Message<100> msgB; // Message with ID 100
+```
+
 ---
 
 ## 6.2 · Template Parameters in Lambda Expressions (C++20)
@@ -1143,12 +1252,22 @@ concept ECSComponent = std::is_trivially_destructible_v<T>
 template <Numeric T>
 T lerp(T a, T b, float t) { return a + (b - a) * t; }
 
-// Requires clause in template head
+// Requires clause in template head, this tells the compiler to only instantiate this function if T satisfies Drawable
 template <typename T> requires Drawable<T>
 void submitToRenderer(RenderQueue& queue, T& obj) {
     if (frustum.contains(obj.boundingBox()))
         queue.push(&obj);
 }
+
+// Here we tell the compiler that T must satisfy the Component concept, 
+// which means it must have a nested type called ComponentTag.
+// This allows us to ensure that only valid component types can be registered in our ECS system.
+template<typename T>
+concept Component = requires {
+    typename T::ComponentTag;
+};
+template<Component... Cs>
+class Query; // Query can only be instantiated with types that satisfy the Component concept
 
 // Concepts combined
 template <ECSComponent T>
