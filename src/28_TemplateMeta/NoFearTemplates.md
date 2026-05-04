@@ -38,7 +38,7 @@ T lerp(const T& a, const T& b, float t) {
 // Usage
 float   f  = lerp(0.0f, 1.0f, 0.5f);      // T = float
 Vec3    v  = lerp(startPos, endPos, 0.3f); // T = Vec3
-Color   c  = lerp(colorA, colorB, alpha);  // T = Color
+Color   c  = lerp(colorA, colorB, alpha);  // T = Color- which should have operator overloads for +, -, and * with float
 ```
 
 ---
@@ -55,9 +55,12 @@ T clamp(T value, T lo, T hi) {
 
 float health = clamp(105.0f, 0.0f, 100.0f); // T deduced as float
 int   ammo   = clamp(ammoCount, 0, maxAmmo); // T deduced as int
+
+// sometimes you may need to explicitly specify the type if deduction fails or is ambiguous
+double preciseValue = clamp<double>(value, 0.0, 1.0); // force T to be double
 ```
 
-Each unique `T` causes the compiler to **instantiate** a new version of the function — this is called *implicit instantiation* and happens on demand.
+The compiler only generates code for the template when it sees an instantiation. If you put the template definition in a header, every .cpp that includes it will generate its own version — leading to long compile times and bloated binaries. By explicitly instantiating in one .cpp and using extern template in others, you can share the same instantiation across the entire program. For more detailed explanation of this topic, see the section on Explicit Instantiation below.
 
 ---
 
@@ -101,6 +104,8 @@ template<typename T = float>
 T DegreesToRadians(T degrees) {
     return degrees * static_cast<T>(0.01745329251994329577);
 }
+// T deduced as int, but converted to float in the calculation
+float radians = DegreesToRadians(90);
 ```
 
 Great for engine utility APIs where `float` is common but `double` is occasionally required.
@@ -132,14 +137,15 @@ dot<double>(fa, db, 3);    // explicit conversion
 
 Function templates work with `inline`, `constexpr`, `static`, `[[nodiscard]]`, and `noexcept` just like normal functions.
 
-> But be careful with `static`; each instantiation gets its own copy of the static variable. To avoid confusion, it's often better to use `static` variables inside a class template or namespace scope instead. 
+> `inline` is often used with function templates to allow definitions in headers without violating the One Definition Rule (ODR).
 
-> `inline` is often used with function templates to allow definitions in headers without violating the One Definition Rule (ODR). `constexpr` enables compile-time evaluation, which is great for math utilities.
+> `constexpr` enables compile-time evaluation, which is great for math utilities. 
 
 ```cpp
 // Compile-time math used in shader constant buffer layout calculations
 template <typename T>
 [[nodiscard]] constexpr T align_up(T value, T alignment) noexcept {
+    // Round up to the nearest multiple of alignment (must be a power of 2)
     return (value + alignment - 1) & ~(alignment - 1);
 }
 
@@ -277,7 +283,7 @@ size_t asset_hash<Guid>(const Guid& guid) {
 
 ## 1.10 · Overloading Revisited
 
-Function template overloads and specializations interact in a specific order: **non-template functions** win over templates; among templates the most specialized wins; explicit specializations don't participate in overload resolution.
+Function template overloads and specializations interact in a specific order: **non-template functions** win over templates; among templates the most specialized wins; explicit specializations don't participate in overload resolution, meaning they are only used when the template is explicitly instantiated with the specialized type.
 
 ```cpp
 // Rule: prefer a non-template if it's an exact match
@@ -289,9 +295,17 @@ void draw(T& renderable) {        // fallback for anything else
     renderable.draw();
 }
 
-// When in doubt, explicitly specialize instead of overloading templates
-// to avoid subtle ordering surprises.
+template <>
+void draw<Sprite>(Sprite& s) {  // specialization — only used if explicitly instantiated
+    // optimized Sprite drawing code
+}
+
+draw(mySprite); // calls non-template draw(Sprite&), not the specialization
+draw(myText);   // calls non-template draw(Text&), not the specialization
+draw(myMesh);   // calls template draw(T&), since no non-template matches
+draw<Sprite>(mySprite); // forces the specialization to be used
 ```
+> [!IMPORTANT] When in doubt, explicitly specialize instead of overloading templates to avoid subtle ordering surprises.
 
 ---
 
@@ -301,7 +315,7 @@ Templates are compiled in two phases:
 1. **Phase 1** — the template definition is parsed and checked for syntax, but type-dependent names are not resolved.
 2. **Phase 2** — when the template is instantiated, type-dependent names are resolved against the actual type.
 
-> This means template code must be visible at the point of instantiation. The entire implementation usually lives in headers. If you put the template definition in a .cpp, other .cpp files won't see it and instantiation will fail. To work around this, you can use explicit instantiation and `extern` templates to control where code is generated.
+> This means template code must be visible at the point of instantiation. The entire implementation usually lives in headers. If you put the template definition in a `.cpp`, other `.cpp` files won't see it and instantiation will fail. To work around this, you can use **explicit instantiation** and `extern` templates to control where code is generated.
 
 
 ```
@@ -317,24 +331,33 @@ Explicit instantiation forces the compiler to generate a concrete version in a s
 
 > [!QUESTION] Why do we need explicit instantiation?
 
-> [!IMPORTANT] Because of the two-phase compilation model: the compiler only generates code for a template when it sees an instantiation. If you put the template definition in a header, every .cpp that includes it will generate its own version — leading to long compile times and bloated binaries. By explicitly instantiating in one .cpp and using extern template in others, you can share the same instantiation across the entire program.
+> [!IMPORTANT] Because of the two-phase compilation model: the compiler only generates code for a template when it sees an instantiation. If you put the template definition in a header, every .cpp that includes it will generate its own version — leading to long compile times and bloated binaries. By explicitly instantiating in one .cpp and using extern template in other .cpp files, you can share the same instantiation across the entire program.
 
+**`math.hpp`**
 ```cpp
-// math.hpp — declare the template
+// Declaration
 template <typename T>
-T saturate(T v);
+T saturate(T v);S
+```
 
-// math.cpp — define AND explicitly instantiate
+**`math.cpp`**
+```cpp
+// Definition
 template <typename T>
 T saturate(T v) { return clamp(v, T(0), T(1)); }
 
+// Instantiation - should be in exactly one .cpp file
 template float  saturate<float>(float);   // emit the float  version here
 template double saturate<double>(double); // emit the double version here
 ```
 
+**`util.cpp`**
 ```cpp
 // In other .cpp files that include math.hpp:
-extern template float  saturate<float>(float);   // don't regenerate — use the one from math.cpp
+#include "math.hpp"
+// ...
+// don't regenerate — use the one from math.cpp
+extern template float  saturate<float>(float);
 extern template double saturate<double>(double);
 ```
 
@@ -344,13 +367,22 @@ extern template double saturate<double>(double);
 
 `extern template` suppresses instantiation in the current translation unit and tells the linker to expect it elsewhere. Essential for widely-used templates in large codebases.
 
+**`engine_types.hpp`** — used in hundreds of .cpp files
 ```cpp
-// engine_types.hpp — used in hundreds of .cpp files
+// Declarations only — no definitions, to avoid multiple instantiations
 extern template class std::vector<RenderCommand>;
 extern template class std::vector<Entity>;
 extern template class std::unordered_map<AssetId, TextureHandle>;
+```
 
-// engine_types.cpp — instantiate exactly once
+**`engine_types.cpp`** — instantiate exactly once
+```cpp
+#include "engine_types.hpp"
+#include "render_command.hpp"
+#include "entity.hpp"
+// .. and other includes needed for the definitions
+
+// Definitions — this is where the code gets generated for these templates
 template class std::vector<RenderCommand>;
 template class std::vector<Entity>;
 template class std::unordered_map<AssetId, TextureHandle>;
@@ -358,13 +390,11 @@ template class std::unordered_map<AssetId, TextureHandle>;
 
 In the sample above you dont have to include `Entity` and `RenderCommand` in the `engine_types.hpp` because you are not using them in that file, you only need to include them in the `engine_types.cpp` where you are instantiating the templates. This way you can reduce compilation dependencies and improve build times.
 
-> So to summarize, when you use extern templates, the extern template is typically declared in a header file so that it is visible when the corresponding header file is included by the clients.
-
 ---
 
 ## 1.14 · Static Variables in Function Templates
 
-Each instantiation of a function template gets its **own** static variable — one per `T`. This can be useful for per-type singletons or caches, but be careful to avoid confusion with static variables in non-template functions.
+Each instantiation of a function template gets its **own** static variable — one per type `T`. This can be useful for per-type singletons or caches, but be careful to avoid confusion with static variables in non-template functions.
 ```cpp
 // Per-type object pool for ECS components
 template <typename T>
@@ -418,6 +448,7 @@ using ShaderHandle  = Handle<ShaderTag>;
 ---
 
 ## 2.2 · Class Template Examples — A Typed Event Bus
+In the follwing sample we have a simple event bus implementation that allows you to subscribe to and publish events of any type. Each event type gets its own independent bus, so there's no overhead for unrelated events. The `EventBus` class template uses a vector of listeners (callbacks) that are invoked when an event is published.
 
 ```cpp
 // Strongly typed event dispatcher
@@ -437,6 +468,18 @@ public:
     }
 };
 
+// Define some event types
+struct PlayerDied {
+    int playerId;
+};
+struct LevelLoaded {
+    std::string levelName;
+};
+struct ControllerInput {
+    int controllerId;
+    std::string action;
+};
+
 // Independent buses per event type — zero-overhead per unrelated event
 EventBus<PlayerDied>      playerDeathBus;
 EventBus<LevelLoaded>     levelBus;
@@ -447,12 +490,46 @@ playerDeathBus.subscribe([](const PlayerDied& e) {
 });
 playerDeathBus.publish(PlayerDied{ .playerId = 42 });
 ```
+For safety critical embedded systems you can use class templates to create type-safe wrappers around hardware registers, ensuring that only valid operations are performed on them.
+
+```cpp
+// Type-safe hardware register access
+template <uintptr_t Address, typename RegType>
+class Register {
+public:
+    static RegType read() {
+        return *reinterpret_cast<volatile RegType*>(Address);
+    }
+    static void write(RegType value) {
+        *reinterpret_cast<volatile RegType*>(Address) = value;
+    }
+};
+// Define specific registers with their addresses and types
+using ControlReg = Register<0x40000000, uint32_t>;
+using StatusReg  = Register<0x40000004, uint32_t>;
+// Usage
+ControlReg::write(0x1); // Set control bit
+uint32_t status = StatusReg::read(); // Read status
+```
 
 ---
 
 ## 2.3 · Class Template Argument Deduction (CTAD) — C++17
 
-Since C++17, the compiler can deduce class template arguments from constructor arguments — no more explicit angle brackets in simple cases.
+Since C++17, the compiler can deduce class template arguments from constructor arguments — no more explicit angle brackets in simple cases. 
+
+**Argument deduction works only for function templates, not for class templates.** With class templates we need to provide the template arguments explicitly when creating an instance of the class template. However, with C++17, we can use class template argument deduction (CTAD) to allow the compiler to deduce the template arguments from the constructor arguments.
+
+As with class template argument deduction, the compiler can perform argument deduction on class templates.
+
+But this works only if the class has a constructor with the same arguments as the template parameters. 
+
+Therefore, when an instance of the class template is created and the constructor is invoked with the arguments, the type of the arguments is used to deduce the template parameters, and you can even customize what the compiler deduces from the passed arguments.
+
+This is possible through deduction guides as following:
+
+
+
 
 ```cpp
 template <typename T, size_t N>
@@ -471,11 +548,48 @@ StaticArray(T, Rest...) -> StaticArray<T, 1 + sizeof...(Rest)>;
 StaticArray clearColor = {0.1f, 0.1f, 0.1f, 1.0f}; // deduced: StaticArray<float, 4>
 ```
 
+For complex classes we require `make_` functions to guide the deduction:
+
+```cpp
+template <typename T>
+class Matrix {
+    T m[4][4];
+public:
+    // Constructor that takes an initializer list of 
+    // initializer lists for easy matrix initialization
+    Matrix(std::initializer_list<std::initializer_list<T>> init) { /* ... */ }
+};
+
+// std::initializer_list constructor allows CTAD, 
+// but we need a deduction guide to specify the template type 
+template <typename T, typename... Rest>
+Matrix(T, Rest...) -> Matrix<T>;
+Matrix m = {
+    {1, 0, 0, 0},
+    {0, 1, 0, 0},
+    {0, 0, 1, 0},
+    {0, 0, 0, 1}
+}; // deduced: Matrix<int>
+
+// If you want to specify the type but still have the size deduced, 
+// you can use a make_ function:
+template <typename T, typename... Rest>
+Matrix<T> make_matrix(Rest... rows) {
+    return Matrix<T>{rows...};
+} 
+auto m = make_matrix<float>(
+    {1, 0, 0, 0},
+    {0, 1, 0, 0},
+    {0, 0, 1, 0},
+    {0, 0, 0, 1}
+); // deduced: Matrix<float>
+```
+
 ---
 
 ## 2.4 · `extern` Class Templates
 
-Same principle as `extern` function templates — suppress per-TU instantiation.
+Same principle as `extern` function templates — suppress per translation unit instantiation.
 
 ```cpp
 // Widely used pool type — instantiate once
@@ -492,6 +606,7 @@ Each instantiation gets its **own** static data members.
 ```cpp
 template <typename T>
 class ComponentRegistry {
+    // inline helps avoid ODR violations when defined in a header
     static inline std::vector<T*> instances_;
     static inline uint32_t        typeId_ = nextTypeId();
 
@@ -502,7 +617,7 @@ public:
 };
 
 // Each component type gets its own registry, its own typeId
-// ComponentRegistry<Transform>::typeId() != ComponentRegistry<Rigidbody>::typeId()
+ComponentRegistry<Transform>::typeId() != ComponentRegistry<Rigidbody>::typeId()
 ```
 
 ---
@@ -533,7 +648,7 @@ void Serializer<std::string>::write(const std::string& v, BinaryStream& s) {
 
 ## 2.7 · Explicit Specialization of Class Templates
 
-Full class specialization replaces everything for a specific type.
+Full class specialization replaces everything for a specific type. This is useful when the generic implementation doesn't work for a particular type or when you want to optimize for a specific case. The specialized version doesn't benefit from changes to the primary template and can lead to code duplication if not used carefully.
 
 ```cpp
 // Primary: generic component storage (SoA-style)
@@ -546,7 +661,15 @@ public:
     size_t size() const   { return data_.size(); }
 };
 
-// Full specialization for Transform — use a custom aligned allocator
+// Usage without specialization
+ComponentStore<Position> positionStore;
+positionStore.add({x, y, z});
+
+```
+Non-specilalized version works for most components, but in this case let Transform needs SIMD alignment for performance. Full specialization for Transform — use a custom aligned allocator
+
+```cpp
+
 template <>
 class ComponentStore<Transform> {
     AlignedBuffer<Transform, 16> data_; // SIMD-aligned
@@ -587,7 +710,7 @@ Mat4 viewProj = view * proj; // dimensions checked at compile time
 
 ## 2.9 · Partial Specialization
 
-Specialize a template for a *family* of types rather than just one.
+Specialize a template for a *family* of types (e.g. `std::vector<T>`) rather than just one.
 
 ```cpp
 // Primary: generic serialization
@@ -631,7 +754,7 @@ BinaryIO<char[256]>::write(out, name);         // calls array specialization
 Example
 **`binary_io.hpp`**
 ```cpp
-// binary_io.hpp — declare primary template and partial specializations
+// Declare primary template and partial specializations
 template <typename T>
 struct BinaryIO {
     static void write(std::ostream& out, const T& v);
@@ -647,12 +770,12 @@ struct BinaryIO<T[N]> {
 ```
 **`binary_io.cpp`**
 ```cpp
-// binary_io.cpp — define member functions
+// Member functions definitions
 #include "binary_io.hpp"
 
 template <typename T>
 void BinaryIO<T>::write(std::ostream& out, const T& v) {
-    out.write(reinterpret_cast<const char*>(&v), sizeof(T));
+    // Same implementation as before
 }
 template <typename T>
 void BinaryIO<std::vector<T>>::write(std::ostream& out, const std::vector<T>& v) {
@@ -660,8 +783,7 @@ void BinaryIO<std::vector<T>>::write(std::ostream& out, const std::vector<T>& v)
 }
 template <typename T, size_t N>
 void BinaryIO<T[N]>::write(std::ostream& out, const T (&arr)[N]) {
-    for (const T& elem : arr)
-        BinaryIO<T>::write(out, elem);
+    // Same implementation as before
 }
 ```
 
@@ -680,6 +802,14 @@ How you pass template arguments matters — it affects copies, references, and l
 | `const T& v` | safe read-only; avoids copies for large types |
 | `T* v` | pointer; deduction strips const from pointee |
 | `T&& v` | forwarding reference (see below) |
+
+```cpp
+template <typename T> void process(T value);        // always copies
+template <typename T> void process(T& value);       // lvalue reference 
+template <typename T> void process(const T& value); // read-only, no copies for large types
+template <typename T> void process(T* value);       // pointer semantics
+template <typename T> void process(T&& value);      // forwarding reference (perfect forwarding)
+```
 
 ```cpp
 // BAD — copies every asset path string on every lookup
@@ -714,7 +844,7 @@ emplace(t); // OK — lvalue forwarded as lvalue
 
 ```
 
-> **Summary:** Use const T& for read-only parameters, T for small value types, and T&& + std::forward for factory/emplace functions.
+> **Summary:** Use const `T&` for read-only parameters, `T` for small value types, and `T&&` + `std::forward` for factory/emplace functions.
 ---
 
 ## 3.2 · Forwarding References
@@ -741,7 +871,7 @@ The rule: use `T&&` + `std::forward<T>` in a deduced context when building *fact
 Perfect forwarding preserves value category. If you pass an lvalue, it stays an lvalue; if you pass an rvalue, it stays an rvalue. This allows the called function to optimize for move semantics when possible, while still accepting lvalues without forcing unnecessary moves or copies.
 Use cases; wrappers for profiling, tracing, jobs, and command dispatch.
 
-You use `decltype(auto)` as the return type to perfectly forward the return value of the callable, preserving its value category (lvalue or rvalue) and const-qualification. This allows the wrapper function to be as transparent as possible, not interfering with move semantics or const-correctness of the original callable.
+You use `decltype(auto)` as the return type to perfectly forward the return value of the callable, preserving its value category (`lvalue` or `rvalue`) and const-qualification. This allows the wrapper function to be as transparent as possible, not interfering with move semantics or const-correctness of the original callable.
 
 ```cpp
 template<typename Fn, typename... Args>
@@ -751,10 +881,13 @@ decltype(auto) ProfileCall(Fn&& fn, Args&&... args) {
 // Usage
 ProfileCall([](int x) { return x * 2; }, 21); // returns 42, perfectly forwarding the lambda and its argument
 
-// In a more complex example, you might have a function that takes a callable and its arguments, and you want to forward them to another function that does the actual work, while also adding some profiling logic around it.
+// In a more complex example, you might have a function that takes a callable and its arguments, 
+// and you want to forward them to another function that does the actual work, 
+// while also adding some profiling logic around it.
 template<typename Fn, typename... Args>
 decltype(auto) ProfileCall(Fn&& fn, Args&&... args) {
     auto start = std::chrono::high_resolution_clock::now();
+    // Perfectly forward the callable and its arguments to the actual function
     decltype(auto) result = std::forward<Fn>(fn)(std::forward<Args>(args)...);
     auto end = std::chrono::high_resolution_clock::now();
     std::cout << "Call took " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
@@ -843,6 +976,18 @@ using RenderArchetype  = Archetype<Transform, Mesh, Material>;
 static_assert(MovableArchetype::has<Velocity>());
 static_assert(!MovableArchetype::has<Mesh>());
 ```
+Variadic functions are functions that can take a variable number of arguments. In C++, you can create variadic functions using variadic templates, which allow you to define functions that can accept any number of parameters of any type.
+
+```cpp
+// This function template takes a type T and a variable number of arguments (Args...). 
+// It uses perfect forwarding to pass the arguments to the constructor of T, 
+// allowing you to create an instance of T 
+// with any combination of constructor parameters.
+template <typename T, typename... Args>
+T* Create(Args&&... args) {
+    return new T(std::forward<Args>(args)...);
+}
+```
 
 ---
 
@@ -900,6 +1045,12 @@ SystemScheduler<PhysicsSystem, AnimationSystem, AISystem, AudioSystem> scheduler
 ## 4.6 · Variadic Classes — Building an Observer
 
 ```cpp
+template <typename Event>
+class Listener {
+public:
+    virtual void onEvent(const Event& e) = 0;
+};
+
 // Type-safe multi-event listener
 template <typename... Events>
 class MultiListener : public Listener<Events>... {
@@ -907,23 +1058,48 @@ public:
     using Listener<Events>::onEvent...;
 };
 
+// GameHUD can listen to multiple event types without ambiguity or boilerplate.
 class GameHUD : public MultiListener<PlayerDied, ScoreChanged, LevelComplete> {
     void onEvent(const PlayerDied& e)    override { showDeathScreen(e.playerId); }
     void onEvent(const ScoreChanged& e)  override { updateScoreDisplay(e.score); }
     void onEvent(const LevelComplete& e) override { showVictoryScreen(); }
 };
+// Usage
+GameHUD hud;
+hud.onEvent(PlayerDied{ .playerId = 42 });
 ```
+
+Note that in the sample above the `using Listener<Events>::onEvent...;` line is a C++17 fold expression that brings all the `onEvent` methods from the base classes into the scope of `MultiListener`. This allows `GameHUD` to override each `onEvent` method without ambiguity, even though they come from different base classes.
+
+The virtual dispatch will work correctly for each event type, and you can call `onEvent` with any of the event types that `GameHUD` listens to without needing to specify which base class it comes from.
 
 ---
 
 ## 4.7 · Variadic Template Applications — `make_component`
 
+`make_component` is a factory function that constructs a component in-place using perfect forwarding. It accepts **any number of arguments** and forwards them unchanged to the constructor of type `T` — no copies, no separate overloads for every component type.
+
 ```cpp
-// Perfect-forward any number of args to construct a component in-place
+// Generic factory: construct any component T from any set of constructor args
+template <typename T, typename... Args>
+T make_component(Args&&... args) {
+    return T(std::forward<Args>(args)...);
+}
+
+// Works for any component, regardless of how many constructor parameters it has
+auto transform = make_component<Transform>(Vec3{0,1,0}, Quat::identity(), Vec3::one());
+auto health    = make_component<Health>(/*maxHp=*/100, /*regenRate=*/0.5f);
+auto light     = make_component<PointLight>(/*color=*/Color{1,1,0.8f,1}, /*radius=*/10.0f);
+```
+
+In practice, engines embed the same idea directly into the world/registry so the component lands straight in the pool:
+
+```cpp
+// World::emplace — make_component + insertion in one step
 template <typename T, typename... Args>
 T& World::emplace(EntityId entity, Args&&... args) {
     auto& pool = getPool<T>();
-    pool[entity.index()] = T(std::forward<Args>(args)...);
+    pool[entity.index()] = T(std::forward<Args>(args)...); // same forwarding trick
     entityMask_[entity.index()].set(ComponentId<T>::value);
     return pool[entity.index()];
 }
@@ -934,6 +1110,8 @@ world.emplace<RigidBody>(entity,
     /*shape=*/ CollisionShape::Box,
     /*flags=*/ RigidBodyFlags::Dynamic | RigidBodyFlags::CastsShadow);
 ```
+
+The key insight is that `typename... Args` + `std::forward<Args>(args)...` lets one function serve every possible constructor signature — that's the variadic template application.
 
 ---
 
@@ -968,9 +1146,15 @@ auto byPriority = [](const auto& a, const auto& b) {
     return a.priority > b.priority;
 };
 
-std::sort(renderQueue.begin(),   renderQueue.end(),   byPriority);
+// Same as
+template <typename T>
+bool byPriority(const T& a, const T& b) {
+    return a.priority > b.priority;
+};
+
+std::sort(renderQueue.begin(),     renderQueue.end(),     byPriority);
 std::sort(particleEffects.begin(), particleEffects.end(), byPriority);
-std::sort(audioEvents.begin(),   audioEvents.end(),   byPriority);
+std::sort(audioEvents.begin(),     audioEvents.end(),     byPriority);
 ```
 
 ---
@@ -1086,7 +1270,7 @@ if (allChecksPass(
 
 ## 5.5 · `auto` Type Placeholder in Template Context (C++17)
 
-`auto` can appear as a non-type template argument placeholder.
+`auto` can appear as a non-type template argument placeholder. This can be handy for compile-time constants, type-based dispatch, and embedding values in types. 
 
 ```cpp
 // Before C++17 — explicit type needed
@@ -1103,6 +1287,8 @@ struct CompileTimeConstant {
 CompileTimeConstant<42>        intConst;    // type = int
 CompileTimeConstant<3.14f>     floatConst;  // type = float
 CompileTimeConstant<'X'>       charConst;   // type = char
+
+floatConst.value; // 3.14f
 
 // Practical: enum values as template parameters
 enum class ShaderStage { Vertex, Fragment, Compute };
@@ -1127,10 +1313,11 @@ constexpr size_t alignedSizeOf() {
     if constexpr (alignof(T) >= MinAlign) {
         return base;
     } else {
+        // Round up to the next multiple of MinAlign
         return (base + MinAlign - 1) & ~(MinAlign - 1);
     }
 }
-
+// fails if T is not a complete type, but works for arrays and fundamental types
 static_assert(alignedSizeOf<uint8_t, 16>() == 16);
 static_assert(alignedSizeOf<float[4], 16>() == 16);
 ```
@@ -1141,20 +1328,27 @@ static_assert(alignedSizeOf<float[4], 16>() == 16);
 
 ## 6.1 · Non-Type Template Parameters — Expanded (C++20)
 
-C++20 allows floating-point types, class types with `constexpr` constructors, and structural types as non-type template parameters.
+C++20 allows floating-point types, class types with `constexpr` constructors, and structural types as non-type template parameters. 
+> Non-type means that the template parameter is a value, not a type. This allows you to embed values directly in types, which can be useful for things like compile-time configuration, type-safe identifiers, and more expressive template metaprogramming.
 
 ```cpp
 // Compile-time color — no more magic numbers in pipeline descriptions
 struct Color {
     float r, g, b, a;
+    // C++20 structural type requirement: all members must be public and of literal types
     constexpr bool operator==(const Color&) const = default; // structural type requirement
 };
 
+// Render pass with a compile-time clear color
 template <Color ClearColor>
 class RenderPass {
 public:
+    // Clear the render target to the specified color — no runtime overhead
     void begin(CommandBuffer& cmd) {
-        cmd.clearColor(ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a);
+        cmd.clearColor(ClearColor.r,
+         ClearColor.g, 
+         ClearColor.b, 
+         ClearColor.a);
     }
 };
 
@@ -1163,6 +1357,10 @@ constexpr Color Midnight = {0.10f, 0.10f, 0.20f, 1.0f};
 
 RenderPass<SkyBlue>  dayPass;
 RenderPass<Midnight> nightPass;
+
+CommandBuffer cmd;
+dayPass.begin(cmd);   // clears to sky blue
+nightPass.begin(cmd); // clears to midnight blue
 ```
 
 C++20 broadens what can be used as non-type template parameters.
@@ -1200,6 +1398,11 @@ auto componentCast = []<typename To, typename From>(From* ptr) -> To* {
     static_assert(std::is_base_of_v<From, To>, "Invalid component cast");
     return static_cast<To*>(ptr);
 };
+// Usage
+Component* c = getComponent(entity);
+if (auto* t = componentCast<Transform>(c)) {
+    // Successfully cast to Transform — safe to use t
+}
 ```
 
 ---
@@ -1238,6 +1441,9 @@ Concepts let you express *requirements* on template parameters with readable syn
 template <typename T>
 concept Numeric = std::is_arithmetic_v<T>;
 
+// A drawable object must have 
+// a draw() method 
+// and a boundingBox() method
 template <typename T>
 concept Drawable = requires(T obj, CommandBuffer& cmd) {
     { obj.draw(cmd) } -> std::same_as<void>;
@@ -1252,7 +1458,9 @@ concept ECSComponent = std::is_trivially_destructible_v<T>
 template <Numeric T>
 T lerp(T a, T b, float t) { return a + (b - a) * t; }
 
-// Requires clause in template head, this tells the compiler to only instantiate this function if T satisfies Drawable
+// Requires clause in template head,
+// this tells the compiler to only instantiate this function 
+// if T satisfies Drawable
 template <typename T> requires Drawable<T>
 void submitToRenderer(RenderQueue& queue, T& obj) {
     if (frustum.contains(obj.boundingBox()))
