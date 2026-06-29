@@ -26,6 +26,7 @@
 #include "26_InputOutputStream/InputOutputStreamSample.hpp"
 #include "27_RTTI/RTTISample.hpp"
 #include "28_TemplateMeta/TMPSample.hpp"
+#include "29_InplaceFactory/InplaceFactorySample.hpp"
 
 #include <gtest/gtest.h>
 
@@ -195,6 +196,12 @@ TEST(Samples, RTTI) {
 TEST(Samples, TemplateMeta) {
   TMPSample sample;
   // This will run the Template Meta Programming demonstration
+  sample.run();
+}
+
+TEST(Samples, InplaceFactory) {
+  InplaceFactorySample sample;
+  // This will run the In-Place Factory demonstration
   sample.run();
 }
 
