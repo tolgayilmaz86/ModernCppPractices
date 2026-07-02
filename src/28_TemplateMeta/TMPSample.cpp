@@ -542,13 +542,25 @@ constexpr T tmpl_abs(T x) noexcept {
 // a macro trick
 #include <source_location>
 
+// A parameter pack must be the LAST function parameter to be deduced, so we
+// cannot write `tmpl_log(fmt, Args&&..., source_location)`. The idiom is to
+// bundle the format string with the source_location in a small struct whose
+// constructor captures the caller's location by default.
+struct log_format {
+  std::string_view fmt;
+  std::source_location loc;
+  template <typename S>
+  log_format(const S &f, const std::source_location l =
+                             std::source_location::current())
+      : fmt(f), loc(l) {}
+};
+
 template <typename... Args>
-void tmpl_log(
-    std::string_view fmt, Args &&...args,
-    const std::source_location loc = std::source_location::current()) {
+void tmpl_log(log_format fmt, Args &&...args) {
+  const std::source_location &loc = fmt.loc;
   std::cout << "[" << loc.file_name() << ":" << loc.line() << "] ";
   // Simple substitution — in production use std::format (C++20)
-  std::cout << fmt;
+  std::cout << fmt.fmt;
   if constexpr (sizeof...(args) > 0) {
     std::cout << " (";
     ((std::cout << args << " "), ...);

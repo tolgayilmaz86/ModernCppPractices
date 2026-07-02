@@ -20,6 +20,10 @@ include_directories(src)
 
 file(GLOB_RECURSE SOURCES src/*.cpp)
 
+# 00_SketchBoard holds standalone scratch/interview programs, each with its own
+# main(); exclude them so they don't collide with src/main.cpp when linking.
+list(FILTER SOURCES EXCLUDE REGEX "/00_SketchBoard/")
+
 add_executable(main ${SOURCES})
 
 # Enable strict compile warnings and debug info

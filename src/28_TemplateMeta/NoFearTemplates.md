@@ -1,22 +1,13 @@
 # No Fear Templates
 ### A Guide to C++ Templates & Their Evolution
 
+[ToC]
+
 ---
 
 > *"The compiler is your ally. Templates are the language it speaks fluently."*
 
 C++ templates are one of the most powerful features in the language — and also one of the most misunderstood. This guide walks through every major template concept, from classic function templates to C++20 innovations, using real world usage examples such as; math libraries, ECS architectures, asset systems, render pipelines, embedded systems, and more.
-
----
-
-## Table of Contents
-
-- [Section 1 — Function Templates](#section-1--function-templates)
-- [Section 2 — Class Templates](#section-2--class-templates)
-- [Section 3 — Passing Arguments](#section-3--passing-arguments)
-- [Section 4 — Template Changes in C++11](#section-4--template-changes-in-c11)
-- [Section 5 — Template Changes in C++14 & C++17](#section-5--template-changes-in-c14--c17)
-- [Section 6 — Template Changes in C++20](#section-6--template-changes-in-c20)
 
 ---
 
@@ -40,6 +31,31 @@ float   f  = lerp(0.0f, 1.0f, 0.5f);      // T = float
 Vec3    v  = lerp(startPos, endPos, 0.3f); // T = Vec3
 Color   c  = lerp(colorA, colorB, alpha);  // T = Color- which should have operator overloads for +, -, and * with float
 ```
+```cpp
+template <typename T>
+constexpr std::pair<bool, T> clamp(
+    const T value,
+    const T minimum = std::numeric_limits<T>::lowest(),
+    const T maximum = std::numeric_limits<T>::max())
+{
+    if (value < minimum || value > maximum) {
+        return {true, value > maximum ? maximum : minimum};
+    }
+    return {false, value};
+}
+
+auto [clamped1, v1] = clamp(3.14f);           // clamped1 = false, v1 = 3.14f  (within range)
+auto [clamped2, v2] = clamp(42, 0, 10);       // clamped2 = true,  v2 = 10     (42 > 10, clamped to max)
+auto [clamped3, v3] = clamp(-5, 0, 100);      // clamped3 = true,  v3 = 0      (-5 < 0,  clamped to min)
+auto [clamped4, v4] = clamp(3.14, 0.0, 5.0);  // clamped4 = false, v4 = 3.14   (within range)
+```
+`clamp` works for every arithmetic type — `float`, `double`, `int16_t`, etc. — without code
+duplication.  In safety-critical code this is important: a single, reviewed implementation is
+safer than many near-identical copies.
+
+> **Design note:** `constexpr` allows the function to be evaluated at compile time when given
+> constant arguments, enabling compile-time range checks that cost nothing at runtime.
+
 
 ---
 
@@ -1500,6 +1516,12 @@ template <typename T>
 concept Serializable = requires(const T& v, BinaryWriter& w) {
     { v.serialize(w) } -> std::same_as<void>;
 };
+
+template <Serializable T>
+void saveToDisk(const T& obj, BinaryWriter& w) {
+    obj.serialize(w);
+}// an obj without serialize() will fail to compile with a clear error message
+
 
 // Does T support SIMD-friendly iteration?
 template <typename T>
