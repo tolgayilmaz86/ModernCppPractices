@@ -95,6 +95,11 @@ Test Execution Flow:
 | **C++ Cast Types** | Safe type conversions, avoiding C-style casts |
 | **Thread Safety** | Writing concurrent code, avoiding data |
 | **Concepts** | Template constraints, clearer intent in generic code |
+| **Template Metaprogramming** | Compile-time computation, type traits, and static assertions |
+| **Constexpr Programming** | Compile-time evaluation, performance optimization |
+| **Lambda Expressions** | Inline function objects, closures, and functional programming |
+| **Range-based Algorithms** | Cleaner iteration, STL algorithms, and functional style |
+| **Structured Bindings** | Decomposing tuples, pairs, and structured data |
 
 ## 🚀 Building and Running
 
@@ -103,7 +108,6 @@ Test Execution Flow:
 - **C++23 compatible compiler** (MSVC 19.3+, GCC 12+, Clang 15+)
 - **CMake 3.16+**
 - **vcpkg package manager**
-- **Git** (for cloning and .gitignore)
 
 ### Quick Start
 
@@ -125,7 +129,7 @@ ctest --test-dir build
 # 5. Explore samples
 ./build/main                    # List all samples
 ./build/main 1                  # Run RAII sample
-bash run.sh SFINAE             # Run SFINAE by name
+bash run.sh SFINAE              # Run SFINAE by name
 ```
 
 ### Detailed Build Process
@@ -170,24 +174,38 @@ ctest --test-dir build
 # Run by number
 ./build/main 1    # RAII
 ./build/main 2    # SFINAE
+...
 
-# Output example:
 # Available samples:
-# 1: 01_RAII - Resource Acquisition Is Initialization
-# 2: 02_SFINAE - Substitution Failure Is Not An Error
-# 3: 03_CRTP - Curiously Recurring Template Pattern
-# 4: 04_PIMPL - Pointer to Implementation
-# 5: 05_RuleOfFive - Rule of Five
-# 6: 06_TypeErasure - Type Erasure
-# 7: 07_VariantVisitor - Variant and Visitor Pattern
-# 8: 08_SmartPointers - Smart Pointers
-# 9: 09_ExceptionSafety - Exception Safety
+# 1: Resource Acquisition Is Initialization
+# 2: SFINAE - Substitution Failure Is Not An Error
+# 3: CRTP - Curiously Recurring Template Pattern
+# 4: PIMPL - Pointer to Implementation
+# 5: Rule of Five
+# 6: Type Erasure
+# 7: Variant and Visitor Pattern
+# 8: Smart Pointers
+# 9: Exception Safety
 # 10: Move Semantics
 # 11: Tag Dispatching
 # 12: Deep vs Shallow Copy
 # 13: Copy and Swap Idiom
 # 14: C++ Cast Types
 # 15: Thread Safety
+# 16: Concepts
+# 17: Coroutines
+# 18: Single Responsibility Principle
+# 19: Open/Closed Principle
+# 20: Liskov Substitution Principle
+# 21: Interface Segregation Principle
+# 22: Dependency Inversion Principle
+# 23: UML Relationships
+# 24: Three Way Comparison Operator
+# 25: Projections
+# 26: Input/Output Streams 
+# 27: RunTime Type Information
+# 28: Template Metaprogramming
+# 29: Inplace Factory
 ```
 
 #### Using Runner Scripts
@@ -198,33 +216,7 @@ bash run.sh RAII           # Run by name
 run.bat 02                 # Windows batch script
 ```
 
-## 🐛 Debugging Samples
-
-This project includes comprehensive debugging support for VS Code with pre-configured launch configurations. Debug any sample to step through code, inspect variables, and understand Modern C++ concepts in action.
-
-### Prerequisites for Debugging
-
-- **VS Code** with C++ extension installed
-- **Project built in Debug mode** (required for debugging symbols)
-- **Breakpoints** set in sample code
-
-### Quick Debug Start
-
-1. **Build in Debug mode:**
-   ```bash
-   cmake --build build --config Debug
-   ```
-
-2. **Open any sample file** (e.g., `src/06_TypeErasure/TypeErasureSample.cpp`)
-
-3. **Set breakpoints** by clicking in the left gutter next to line numbers
-
-4. **Start debugging:**
-   - Press `F5` or go to **Run → Start Debugging**
-   - Select **"Run Single Sample (Debug)"** from the dropdown
-   - Choose your sample from the picker (e.g., "6 - Type Erasure")
-
-### Debug Configurations
+### Run/Debug Configurations
 
 The project includes several debug configurations in `.vscode/launch.json`:
 
@@ -234,127 +226,6 @@ The project includes several debug configurations in `.vscode/launch.json`:
 | **Run All Samples (Debug)** | Debug through all samples sequentially | Understanding sample flow or testing breakpoints |
 | **Run Unit Tests (Debug)** | Debug the test suite | Investigating test failures |
 | **Debug Tests** | Debug individual test cases | Deep testing analysis |
-
-### Step-by-Step Debugging Guide
-
-#### 1. Setting Breakpoints
-```cpp
-// Example: Set breakpoint in TypeErasureSample.cpp
-void TypeErasureSample::run() {
-    std::cout << "Running Type Erasure Sample..." << std::endl;  // ← Click here for breakpoint
-    
-    // Your breakpoint will hit here when debugging
-    std::vector<AnyShape> shapes;
-    shapes.emplace_back(CircleShape{5.0});  // ← Or here to inspect object creation
-}
-```
-
-#### 2. Debug Controls
-- **F5**: Continue execution to next breakpoint
-- **F10**: Step over (execute current line, don't enter functions)
-- **F11**: Step into (enter function calls)
-- **Shift+F11**: Step out (exit current function)
-- **Shift+F5**: Stop debugging
-
-#### 3. Inspecting Variables
-- **Variables Panel**: View local, global, and static variables
-- **Watch Panel**: Add custom expressions (e.g., `shapes.size()`, `shape.area()`)
-- **Hover**: Mouse over variables in code to see values
-- **Debug Console**: Evaluate expressions like `shapes[0].area()`
-
-#### 4. Advanced Debugging Features
-
-**Conditional Breakpoints:**
-- Right-click breakpoint → Add condition (e.g., `i == 5`)
-- Break only when specific conditions are met
-
-**Logpoints:**
-- Right-click breakpoint → "Log Message"
-- Print debug info without stopping execution
-
-**Call Stack Inspection:**
-- View function call hierarchy
-- Jump to different stack frames
-- Understand program flow
-
-### Debugging Different Sample Types
-
-#### Template-Heavy Samples (CRTP, SFINAE)
-```cpp
-// Set breakpoint in template instantiation
-template <typename T>
-void process(T&& value) {
-    std::cout << "Processing: " << value << std::endl;  // Break here
-}
-
-// The debugger will show template parameters
-process(42);  // T = int
-process("hello");  // T = const char*
-```
-
-#### Polymorphic Code (Type Erasure, Inheritance)
-```cpp
-// Break in virtual function calls
-void drawShape(const Drawable& shape) {
-    shape.draw();  // Break here to see dynamic dispatch
-}
-
-// Inspect the actual derived type at runtime
-```
-
-#### Exception Safety Samples
-```cpp
-// Break on exception throw/catch
-try {
-    riskyOperation();  // Break here
-    throw std::runtime_error("Error!");  // Or here
-} catch (const std::exception& e) {
-    std::cout << "Caught: " << e.what() << std::endl;  // Break here
-}
-```
-
-### Troubleshooting Common Issues
-
-#### Breakpoint Not Hit
-- **Ensure Debug build**: `cmake --build build --config Debug`
-- **Check configuration**: Select correct debug config from dropdown
-- **Rebuild after changes**: Clean rebuild if code was modified
-
-#### Variables Not Showing Values
-- **Debug symbols missing**: Rebuild in Debug configuration
-- **Optimized out**: Some variables may be optimized away in complex code
-- **Use Watch window**: Add variables explicitly to watch
-
-#### Program Runs But Doesn't Stop
-- **Wrong sample selected**: Verify sample number in debug config
-- **Conditional breakpoint**: Check if conditions are met
-- **Release vs Debug**: Ensure using Debug configuration
-
-### Debug Tips for Learning C++
-
-- **Step through STL containers**: Watch how `std::vector`, `std::unique_ptr` work internally
-- **Observe object lifetimes**: Set breakpoints in constructors/destructors
-- **Template instantiation**: See how templates generate code at compile time
-- **Memory layout**: Inspect object sizes and layouts with debugger
-- **Performance analysis**: Use debugger to understand optimization opportunities
-
-### Integration with Development Workflow
-
-Debugging is integrated into the development process:
-
-```bash
-# 1. Make code changes
-# 2. Build debug version
-cmake --build build --config Debug
-
-# 3. Set breakpoints in new code
-# 4. Debug specific sample
-# 5. Verify behavior
-# 6. Run tests to ensure no regressions
-ctest --test-dir build
-```
-
-This debugging setup makes it easy to experiment with Modern C++ concepts while understanding exactly how they work under the hood!
 
 ### Development Workflow
 
@@ -426,41 +297,6 @@ This project uses an **auto-registration system** that makes adding new samples 
    - Add `src/17_NewTopic/README.md` with detailed explanation
 
 **That's it!** The `REGISTER_SAMPLE` macro automatically registers your sample with the runner system. The number (17) controls the display order.
-
-### Build System Details
-
-#### CMake Configuration
-- **C++23 Standard**: Ensures modern language features
-- **Static Runtime**: Consistent linking across platforms
-- **Recursive Source Discovery**: Automatically finds all .cpp files
-- **Include Path Management**: Proper header resolution
-
-#### Test Framework
-- **Google Test Integration**: Industry-standard testing
-- **Sample Validation**: Each practice example is tested
-- **Cross-platform Execution**: Works on Windows, Linux, macOS
-
-#### Package Management
-- **vcpkg Manifest**: Declarative dependency management
-- **Local Installation**: No system-wide package pollution
-- **Reproducible Builds**: Consistent environments
-
-## 🧪 Testing Strategy
-
-### Unit Tests
-- Each sample has dedicated test cases
-- Validates sample execution without errors
-- Ensures examples remain functional during development
-
-### Integration Tests
-- Build system verification
-- Cross-platform compatibility
-- Dependency resolution testing
-
-### Sample Validation
-- Runtime behavior verification
-- Output consistency checking
-- Error handling validation
 
 ## 📋 Requirements Summary
 
