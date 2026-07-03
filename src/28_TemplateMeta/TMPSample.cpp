@@ -1,7 +1,7 @@
 #include "TMPSample.hpp"
+#include <algorithm>
 #include <concepts>
 #include <iostream>
-#include <numeric>
 #include <string>
 #include <string_view>
 #include <tuple>
