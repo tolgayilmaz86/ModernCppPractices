@@ -2,6 +2,7 @@
 [ToC]
 
 ---
+
 ## Overview
 
 **Template Meta Programming (TMP)** is a technique that uses C++ templates to perform computation at **compile time** rather than at runtime. The compiler itself becomes the "interpreter", executing template instantiations as programs and producing results that are baked directly into the binary.

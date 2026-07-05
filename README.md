@@ -107,7 +107,7 @@ Test Execution Flow:
 
 - **C++23 compatible compiler** (MSVC 19.3+, GCC 12+, Clang 15+)
 - **CMake 3.16+**
-- **vcpkg package manager**
+- **vcpkg package manager**, with `VCPKG_ROOT` pointing at it (see [Linux / WSL Setup](#linux--wsl-setup) if you don't have one yet)
 
 ### Quick Start
 
@@ -131,6 +131,31 @@ ctest --test-dir build
 ./build/main 1                  # Run RAII sample
 bash run.sh SFINAE              # Run SFINAE by name
 ```
+
+### Linux / WSL Setup
+
+On Windows/MSVC, vcpkg and GCC/Clang are typically already on the machine or bundled with Visual Studio. On a fresh Linux or WSL install there are a few extra one-time steps before "Quick Start" above will work:
+
+```bash
+# 1. Install a compiler, CMake, and the tools vcpkg needs to build ports from source
+sudo apt-get update
+sudo apt-get install -y build-essential gcc g++ cmake curl zip unzip tar pkg-config
+
+# 2. Get and bootstrap vcpkg (skip if you already have a vcpkg install)
+git clone https://github.com/microsoft/vcpkg.git ~/vcpkg
+~/vcpkg/bootstrap-vcpkg.sh -disableMetrics
+
+# 3. Point CMake at it (add this to your ~/.bashrc to persist it)
+export VCPKG_ROOT=~/vcpkg
+```
+
+Notes:
+- `zip`/`unzip`/`curl`/`tar` are required by vcpkg itself when building/packaging ports (e.g. GTest) — `bootstrap-vcpkg.sh` will fail fast and tell you which one is missing.
+- If you cloned vcpkg with `--depth 1` (a shallow clone), `vcpkg install` may fail with `failed to 'git show' versions/baseline.json` because the pinned baseline commit in [vcpkg.json](vcpkg.json) isn't reachable. Run `git -C ~/vcpkg fetch --unshallow` to fix it, or just clone without `--depth 1`.
+- `ctest --test-dir build` currently reports `No tests were found!!!` on all platforms because `enable_testing()` in [CMakeLists.txt](CMakeLists.txt) is called *after* `add_subdirectory(tests)`, so the `add_test()` in [tests/CMakeLists.txt](tests/CMakeLists.txt) never registers. Until that's fixed, run the test binary directly instead:
+  ```bash
+  ./build/tests/unit_tests
+  ```
 
 ### Detailed Build Process
 
@@ -226,6 +251,17 @@ The project includes several debug configurations in `.vscode/launch.json`:
 | **Run All Samples (Debug)** | Debug through all samples sequentially | Understanding sample flow or testing breakpoints |
 | **Run Unit Tests (Debug)** | Debug the test suite | Investigating test failures |
 | **Debug Tests** | Debug individual test cases | Deep testing analysis |
+
+These configurations use `cppvsdbg`, the Visual Studio Windows debugger, and reference MSVC's multi-config output paths (`build/Debug/main.exe`). They only work on Windows. On Linux/WSL, use the parallel `(Linux/gdb)` configurations instead — these use `cppdbg` with `gdb` and point at the single-config output paths GCC/Clang produce (`build/main`, `build/tests/unit_tests`):
+
+| Configuration | Purpose |
+|---------------|---------|
+| **Run All Samples (Linux/gdb)** | Debug through all samples sequentially |
+| **Run Single Sample (Linux/gdb)** | Debug one specific sample |
+| **Run Unit Tests (Linux/gdb)** | Debug the full test suite |
+| **Run Single Test (Linux/gdb)** | Debug a single test filtered by name |
+
+Requires `gdb` on your `PATH` (`sudo apt-get install -y gdb` if it isn't already installed) and the C/C++ extension in VS Code.
 
 ### Development Workflow
 
