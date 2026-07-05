@@ -1,5 +1,9 @@
 # Thread Safety in Modern C++
 
+[ToC]
+
+---
+
 ## Overview
 
 Writing thread-safe code is essential in modern C++ applications. Thread safety ensures that shared data is accessed correctly when multiple threads execute concurrently. This sample demonstrates best practices for thread safety using modern C++ concurrency features.
@@ -24,7 +28,7 @@ int shared_data = 0;
 void thread_safe_increment() {
     std::lock_guard<std::mutex> lock(mtx);  // RAII lock
     shared_data++;
-}
+} // Lock automatically released here
 
 // Lock-free with atomics
 std::atomic<int> atomic_counter{0};
@@ -33,81 +37,6 @@ void atomic_increment() {
     atomic_counter++;  // No locks needed
 }
 ```
-
-## Sample Output
-
-```
-Running Thread Safety Sample...
-
-=== Data Race Demonstration ===
-Expected: 200000, Actual: 150843
-Data race caused lost updates!
-
-=== Mutex Solution ===
-With mutex - Expected: 200000, Actual: 200000
-Mutex prevents data races!
-
-=== Atomic Solution ===
-With atomic - Expected: 200000, Actual: 200000
-Atomics provide lock-free thread safety!
-Flag was: false, now: true
-
-=== Scoped Lock Solution (Deadlock-Free) ===
-Transferred $200 successfully
-Transferred $100 successfully
-Final balances - A: $900, B: $600
-
-=== Condition Variables - Producer/Consumer ===
-Produced: Message 0
-Consumed: Message 0
-Produced: Message 1
-Consumed: Message 1
-Producer-consumer pattern completed!
-
-=== std::async and std::future ===
-Tasks started, doing other work...
-Starting expensive calculation for 10
-Starting expensive calculation for 20
-Results: 100, 400
-Packaged task result: 225
-
-=== Thread-Safe Queue Implementation ===
-P1-M0
-C1 got: P1-M0
-P2-M0
-C2 got: P2-M0
-Thread-safe queue demonstration completed!
-
-=== Reader-Writer Lock Pattern ===
-Reader active, data: 0 (readers: 1)
-Reader active, data: 0 (readers: 2)
-Writer updated data to: 1
-Reader-writer pattern allows multiple concurrent readers!
-
-=== Thread Safety Best Practices ===
-1. Prefer immutable data when possible
-2. Use atomics for simple operations
-3. Use mutexes for complex operations
-4. Always lock mutexes in the same order
-5. Use scoped_lock for multiple mutexes
-6. Minimize lock duration
-7. Consider lock-free alternatives when appropriate
-8. Use condition variables for waiting
-9. Avoid busy waiting
-10. Test with thread sanitizer (TSAN)
-
-RAII with locks (automatic unlock):
-Lock acquired
-Lock automatically released
-
-Lock hierarchy prevents deadlocks:
-- Always acquire locks in the same order
-- Use a global lock ordering
-- Consider lock levels or addresses
-
-Thread Safety demonstration completed!
-```
-
 ## Key Components
 
 ### 1. Data Races and Race Conditions
@@ -117,6 +46,8 @@ Thread Safety demonstration completed!
 
 ### 2. Mutexes and Locks
 - **std::mutex:** Basic mutual exclusion
+- **std::shared_mutex:** Allows multiple readers, single writer
+- **std::counting_semaphore:** Limits concurrent access to a resource
 - **std::lock_guard:** RAII wrapper for automatic unlock
 - **std::unique_lock:** More flexible locking with manual control
 - **std::scoped_lock:** Deadlock-free multiple mutex locking
@@ -157,6 +88,17 @@ This sample demonstrates:
 - Operations take significant time
 - Need to maintain invariants across multiple variables
 
+### ✅ **Use std::shared_mutex when:**
+- Read-heavy workloads
+- Multiple threads reading simultaneously
+- Occasional writes that require exclusive access
+
+### ✅ **Use std::counting_semaphore when:**
+- Limiting concurrent access to a resource
+- Implementing bounded buffers or pools
+- Controlling access to a limited number of resources
+- Use cases can overlap with `std::condition_variable` but potentially better performance
+
 ### ✅ **Use std::atomic when:**
 - Simple operations on fundamental types
 - High-performance requirements
@@ -185,6 +127,7 @@ This sample demonstrates:
 | std::mutex | Medium | Complex operations | Exclusive access |
 | std::shared_mutex | Medium | Reader-writer | Multiple readers |
 | std::condition_variable | Fast | Waiting/notification | Coordination |
+| std::counting_semaphore | Fast | Resource limiting | Coordination |
 | std::async | Variable | Parallel tasks | Result synchronization |
 
 **Performance Tips:**
@@ -218,7 +161,7 @@ private:
     mutable std::once_flag flag_;
 
 public:
-    const Resource& get_resource() const {
+    const Resource& getResource() const {
         std::call_once(flag_, [this]() {
             resource_ = std::make_unique<Resource>();
         });
@@ -231,7 +174,7 @@ public:
 ```cpp
 class Monitor {
 private:
-    mutable std::mutex mutex_;
+    mutable std::mutex mutex_; // mutable because we may lock in const methods
     std::condition_variable cv_;
     // Shared state here
 
@@ -247,6 +190,24 @@ public:
         cv_.notify_all();
     }
 };
+```
+
+### 4. Prefer std::async over raw threads
+Threads are powerful but can be error-prone. Use `std::async` for automatic management of thread lifetimes and results when you want to run a function asynchronously and retrieve its result later, without worrying about manual thread management.
+
+async provides a higher-level abstraction that handles thread creation, joining, and exception propagation. 
+```cpp
+// ❌ Raw thread management
+std::thread t([]() {
+    // Do work
+});
+t.join();
+
+// ✅ Use std::async for automatic management
+auto future = std::async(std::launch::async, []() {
+    // Do work
+});
+// future.get();  // Wait for completion
 ```
 
 ## Avoiding Common Pitfalls

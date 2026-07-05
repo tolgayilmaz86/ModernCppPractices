@@ -1,4 +1,7 @@
 # C++20 Concepts
+[ToC]
+
+---
 
 ## Overview
 
@@ -19,13 +22,13 @@ struct has_size<T, std::void_t<decltype(std::declval<T>().size())>>
 // Constrained function using enable_if
 template <typename T>
 typename std::enable_if<has_size<T>::value, std::size_t>::type
-get_size(const T& container) {
+size(const T& container) {
     return container.size();
 }
 
 template <typename T>
 typename std::enable_if<!has_size<T>::value, std::size_t>::type
-get_size(const T&) {
+size(const T&) {
     return 1;
 }
 ```
@@ -45,11 +48,11 @@ concept Sizable = requires(T t) {
 };
 
 // Constrained function using concept
-std::size_t get_size(const Sizable auto& container) {
+std::size_t size(const Sizable auto& container) {
     return container.size();
 }
 
-std::size_t get_size(const auto&) {
+std::size_t size(const auto&) {
     return 1;  // Fallback
 }
 ```
@@ -69,7 +72,7 @@ std::size_t get_size(const auto&) {
 template <typename T>
 concept Numeric = std::is_arithmetic_v<T>;
 
-// Using requires expression
+// Container concept that requires size() and begin()/end()
 template <typename T>
 concept Container = requires(T t) {
     typename T::value_type;           // Type requirement
@@ -80,6 +83,7 @@ concept Container = requires(T t) {
 };
 
 // Composing concepts
+// std::totally_ordered is a standard library concept that requires <, >, <=, >=, ==, !=
 template <typename T>
 concept SortableContainer = Container<T> && 
     std::totally_ordered<typename T::value_type>;
@@ -127,6 +131,27 @@ concept MyConstraint = requires(T t, T other) {
     requires sizeof(T) <= 16;
     requires std::is_copy_constructible_v<T>;
 };
+// Sample class satisfying MyConstraint
+class MyConstrainedClass {
+public:
+    using value_type = int;  // Type requirement
+    void foo() {}            // Simple requirement
+    int bar() { return 42; } // Compound requirement
+
+    // Compound requirement
+    MyConstrainedClass operator+(const MyConstrainedClass&) const
+    {
+        return MyConstrainedClass{};
+    }
+    // sizeof(MyConstrainedClass) <= 16 and 
+    // is_copy_constructible_v are satisfied implicitly
+};
+static_assert(MyConstraint<MyConstrainedClass>);
+
+template <MyConstraint T>
+void process(T value) {
+    // Implementation
+}
 ```
 
 ## Standard Library Concepts

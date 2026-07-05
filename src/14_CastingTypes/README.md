@@ -1,4 +1,7 @@
 # C++ Cast Types
+[ToC]
+
+---
 
 ## Overview
 
@@ -25,71 +28,11 @@ int i = static_cast<int>(d);  // OK: numeric conversion
 Animal* animal = new Dog();
 if (Dog* dog = dynamic_cast<Dog*>(animal)) {
     // Safe: we know it's a Dog
-}
+} // nullptr if not a Dog
 
 // Dangerous: only for low-level code
 float f = 3.14f;
 uint32_t bits = std::bit_cast<uint32_t>(f);  // C++20: safe bit copy
-```
-
-## Sample Output
-
-```
-Running C++ Cast Types Sample...
-
-=== static_cast - Safe Compile-Time Cast ===
-double 3.14159 -> int 3 (truncated)
-Dog* -> Animal*: Woof!
-Animal* -> Dog*: Dog fetches ball
-void* -> Dog*: Woof!
-
-=== dynamic_cast - Runtime-Checked Cast ===
-Animal says: Woof!
-It's a Dog! Dog fetches ball
-Animal says: Meow!
-It's a Cat! Cat scratches furniture
-Animal says: Woof!
-It's a Dog! Dog fetches ball
-Reference cast successful: Dog fetches ball
-
-=== const_cast - Adding/Removing const ===
-Original const string: Hello, World!
-const_cast successful - but don't modify const data!
-Added const: Mutable
-
-=== reinterpret_cast - Bit Reinterpretation ===
-float 3.14 as uint32_t: 1078523331
-uintptr_t deadbeef -> int*: 00000000DEADBEEF
-WARNING: reinterpret_cast is very dangerous!
-
-=== std::bit_cast (C++20) - Safe Bit Reinterpretation ===
-float 1 -> uint32_t: 1065353216
-uint32_t 1065353216 -> float: 1
-byte array -> float: 1
-
-=== Casting Best Practices ===
-1. Prefer static_cast for most conversions
-2. Use dynamic_cast only with polymorphic types
-3. Avoid const_cast when possible
-4. Use reinterpret_cast only for low-level code
-5. Prefer std::bit_cast over reinterpret_cast for bit manipulation
-6. Avoid C-style casts: (int)x - use static_cast<int>(x)
-7. Document why you're casting and why it's safe
-
-=== Modern C++ Casting Guidelines ===
-Smart pointers handle inheritance automatically: Woof!
-Safe downcast successful: Dog fetches ball
-
-=== Cast Types Summary ===
-static_cast: Safe, compile-time checked conversions
-dynamic_cast: Runtime-checked polymorphic conversions
-const_cast: Add/remove const (dangerous)
-reinterpret_cast: Bit reinterpretation (very dangerous)
-std::bit_cast: Safe bit reinterpretation (C++20)
-
-Choose the right cast for the job - wrong choice = bugs!
-
-C++ Cast Types demonstration completed!
 ```
 
 ## Key Components
@@ -172,7 +115,7 @@ This sample demonstrates:
 
 **Performance Tips:**
 - static_cast has zero runtime cost
-- dynamic_cast requires RTTI and virtual functions
+- dynamic_cast requires RTTI and **virtual functions**
 - Avoid casts in performance-critical code when possible
 - Use smart pointers to avoid manual casting
 
@@ -215,6 +158,11 @@ std::optional<To> safe_cast(From value) {
     }
     return std::nullopt;
 }
+// Usage
+auto result = safe_cast<int>(3.14);
+if (result) {
+    // Safe conversion
+}
 ```
 
 ### 4. Bit Manipulation with std::bit_cast
@@ -236,43 +184,6 @@ float decomposeFloat(float value) {
 | User-defined conversion | Domain-specific | Semantic meaning | Hidden conversions |
 | std::to_string, stoi, etc. | String ↔ numeric | Safe, throws on error | Only string/numeric |
 
-## Testing Cast Operations
-
-### 1. static_cast Testing
-```cpp
-TEST(CastTest, StaticCastNumeric) {
-    double d = 3.14;
-    int i = static_cast<int>(d);
-    EXPECT_EQ(i, 3);
-}
-```
-
-### 2. dynamic_cast Testing
-```cpp
-TEST(CastTest, DynamicCastSuccess) {
-    Animal* animal = new Dog();
-    Dog* dog = dynamic_cast<Dog*>(animal);
-    ASSERT_NE(dog, nullptr);
-    delete animal;
-}
-
-TEST(CastTest, DynamicCastFailure) {
-    Animal* animal = new Cat();
-    Dog* dog = dynamic_cast<Dog*>(animal);
-    EXPECT_EQ(dog, nullptr);
-    delete animal;
-}
-```
-
-### 3. const_cast Testing (Limited)
-```cpp
-TEST(CastTest, ConstCast) {
-    const int const_val = 42;
-    int* ptr = const_cast<int*>(&const_val);
-    // Don't modify! Just test the cast works
-    EXPECT_EQ(*ptr, 42);
-}
-```
 
 ## Modern C++ Casting Guidelines
 
@@ -329,18 +240,14 @@ Dog* dog = dynamic_cast<Dog*>(animal);  // Safe
 **When it is INVALID (Undefined Behavior)**
 If the original object was declared as const, modifying it after a const_cast results in Undefined ehavior (UB).
 
-Even if the compiler allows the code to compile and it seems to "work" in some cases, the compiler is free to optimize based on the assumption that const data never changes. It might store the value in read-only memory (like the .rodata section), or it might inline the initial value everywhere, leading to inconsistent results.
+Even if the compiler allows the code to compile and it seems to "work" in some cases, the compiler is free to optimize based on the assumption that const data never changes. 
+It might store the value in read-only memory (like the **.rodata** section), or it might inline the initial value everywhere, leading to inconsistent results.
 
 ```cpp
 // Wrong: Modifying truly const data
 const int value = 42;
 int* ptr = const_cast<int*>(&value);
 *ptr = 100;  // UNDEFINED BEHAVIOR!
-
-// Right: Only use const_cast for non-const data
-int mutable_value = 42;
-const int* const_ptr = &mutable_value;
-int* mutable_ptr = const_cast<int*>(const_ptr);  // OK
 ```
 **When it is VALID**
 Modifying the data is perfectly valid if the original object was not const, but you are currently accessing it through a const pointer or reference.
@@ -363,6 +270,7 @@ double* d = reinterpret_cast<double*>(&i);  // Dangerous!
 
 // Better: Use std::bit_cast if types are same size
 auto bits = std::bit_cast<std::array<std::byte, sizeof(int)>>(i);
+bits[0] = std::byte{0x00};  // Safe bit manipulation
 ```
 
 Choosing the right cast operator is crucial for writing safe, maintainable C++ code. Each cast has specific use cases and safety guarantees - use them appropriately!

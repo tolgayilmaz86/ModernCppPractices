@@ -1,5 +1,7 @@
 # Template Meta Programming (TMP)
+[ToC]
 
+---
 ## Overview
 
 **Template Meta Programming (TMP)** is a technique that uses C++ templates to perform computation at **compile time** rather than at runtime. The compiler itself becomes the "interpreter", executing template instantiations as programs and producing results that are baked directly into the binary.
@@ -29,6 +31,7 @@ There are three generations of TMP idioms in C++:
 | C++17 | `if constexpr`, fold expressions, CTAD(Class Template Argument Deduction) |
 | C++20 | Concepts, `consteval`, relaxed NTTPs, template lambdas |
 
+> NTTP: Non-Type Template Parameter
 ---
 
 ## Techniques Covered
@@ -43,6 +46,7 @@ template <unsigned N>
 struct Factorial {
     static constexpr unsigned value = N * Factorial<N - 1>::value;
 };
+// Base case
 template <>
 struct Factorial<0> {
     static constexpr unsigned value = 1;
@@ -109,7 +113,7 @@ Variadic templates accept an **arbitrary number** of template arguments, enablin
 ```cpp
 // Recursive variadic sum
 template <typename T>
-T variadic_sum(T v) { return v; }                    // base case
+T variadic_sum(T v) { return v; }
 
 template <typename T, typename... Rest>
 T variadic_sum(T first, Rest... rest) {
@@ -118,11 +122,11 @@ T variadic_sum(T first, Rest... rest) {
 
 variadic_sum(1, 2, 3, 4, 5);   // 15
 
-// Parameter pack size
+// Number of template arguments
 template <typename... Ts>
-constexpr std::size_t pack_size() { return sizeof...(Ts); }
+constexpr std::size_t targ_count() { return sizeof...(Ts); }
 
-static_assert(pack_size<int, double, char>() == 3);
+static_assert(targ_count<int, double, char>() == 3);
 ```
 
 **Index sequences** unlock tuple access:
@@ -147,7 +151,7 @@ print_tuple(std::make_tuple(1, 2.5, 'c', "hello")); // 1 2.5 c hello
 
 ### 4. `if constexpr` (C++17)
 
-`if constexpr` selects a branch **at compile time**. The discarded branch is not instantiated, so it can contain code that would be ill-formed for other types — eliminating the need for multiple overloads.
+`if constexpr` selects a branch **at compile time**. The discarded branch is not instantiated, so it can contain code that would be ill-formed for other types, eliminating the need for multiple overloads.
 
 ```cpp
 // Old way:
