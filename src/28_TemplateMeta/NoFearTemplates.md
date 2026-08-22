@@ -605,13 +605,139 @@ auto m = make_matrix<float>(
 
 ## 2.4 · `extern` Class Templates
 
-Same principle as `extern` function templates — suppress per translation unit instantiation.
+`extern template class` stops a translation unit (TU — one `.cpp` file plus everything it includes) from generating its own copy of a class template's machine code, and points the linker at the single copy generated somewhere else.
 
+### The two halves of the mechanism
+
+The feature only works as a pair. One TU emits the code, every other TU promises not to.
+
+| Form | Standard name | Effect | Where it goes |
+|------|---------------|--------|---------------|
+| `template class ObjectPool<Particle>;` | Explicit instantiation **definition** | Emit code for the class and its members **here** | Exactly one `.cpp` in the whole program |
+| `extern template class ObjectPool<Particle>;` | Explicit instantiation **declaration** | Do **not** emit code here; expect it at link time | The header, so every including TU sees it |
+
+> [!IMPORTANT] Writing `extern template` without the matching non-`extern` definition somewhere in the program is an unresolved-symbol error at link time, not a compile error. The two lines are one feature split across two files.
+
+### Full example — a shared object pool
+
+**`object_pool.hpp`** — the template itself, included everywhere
 ```cpp
-// Widely used pool type — instantiate once
+template <typename T>
+class ObjectPool {
+    std::vector<T>       storage_;
+    std::vector<size_t>  freeList_;
+
+public:
+    // Defined out-of-line below — these are what extern template suppresses
+    T*   acquire();
+    void release(T* obj);
+    void reserve(size_t n);
+
+    // Defined in-class, so implicitly inline — NOT suppressed (see below)
+    size_t capacity() const { return storage_.size(); }
+};
+
+// Out-of-line member definitions still live in the header,
+// because any other type still needs to instantiate them.
+template <typename T>
+T* ObjectPool<T>::acquire() { /* ... */ }
+
+template <typename T>
+void ObjectPool<T>::release(T* obj) { /* ... */ }
+
+template <typename T>
+void ObjectPool<T>::reserve(size_t n) { storage_.reserve(n); }
+```
+
+**`engine_pools.hpp`** — the promise, included by hundreds of `.cpp` files
+```cpp
+#include "object_pool.hpp"
+
+class Particle;   // forward declarations are enough here
+class RigidBody;
+
+// Widely used pool types — do not instantiate in this TU
 extern template class ObjectPool<Particle>;
 extern template class ObjectPool<RigidBody>;
 ```
+
+**`engine_pools.cpp`** — the one place the code is generated
+```cpp
+#include "engine_pools.hpp"
+#include "particle.hpp"     // complete types are required *here*
+#include "rigid_body.hpp"
+
+// Emit every non-inline member of these two specializations, once
+template class ObjectPool<Particle>;
+template class ObjectPool<RigidBody>;
+```
+
+`ObjectPool<Bullet>` — any type not listed — keeps working exactly as before. It is instantiated implicitly, per TU, as usual.
+
+### What `extern template` does not suppress
+
+This is the part that surprises people. An explicit instantiation declaration suppresses implicit instantiation of most members, but the standard exempts several categories:
+
+- **Inline functions**, including every member defined inside the class body. `capacity()` above is still instantiated in each TU.
+- **`constexpr` and `const` variables of literal type**, and variables whose type is deduced.
+- **Nested class template specializations**, such as an inner `ObjectPool<T>::Handle`.
+
+> [!WARNING] A header-only class whose members are all defined in-class gains very little from `extern template`. The saving comes from out-of-line member definitions. If you want the build-time win, define the heavy members outside the class body.
+
+### The lazy instantiation trade-off
+
+Normally a member function of a class template is instantiated only when it is called. An explicit instantiation **definition** removes that laziness: it instantiates *every* non-inline, non-specialized member at once.
+
+```cpp
+template <typename T>
+class ObjectPool {
+public:
+    void sortByDepth() { std::sort(storage_.begin(), storage_.end()); } // needs operator<
+};
+
+// Fine — sortByDepth() is never called for Particle, so it is never instantiated
+ObjectPool<Particle> pool;
+
+// Error — this instantiates sortByDepth() too, and Particle has no operator<
+template class ObjectPool<Particle>;
+```
+
+So a type that worked fine under implicit instantiation can fail to compile the moment you explicitly instantiate it. The fix is to give the type the missing operation, or to instantiate only the members you actually want.
+
+### Per-member granularity
+
+Both forms work on a single member instead of the whole class. This is the escape hatch for the problem above, and it keeps the instantiated surface small.
+
+```cpp
+// In the header — suppress just the expensive members
+extern template void ObjectPool<Particle>::reserve(size_t);
+extern template Particle* ObjectPool<Particle>::acquire();
+
+// In exactly one .cpp — emit just those
+template void ObjectPool<Particle>::reserve(size_t);
+template Particle* ObjectPool<Particle>::acquire();
+```
+
+### Placement rules
+
+- Both forms must appear at **namespace scope**, never inside a function or class.
+- The `extern template` declaration must come **before** anything in that TU that would trigger implicit instantiation. Putting it in a header solves this naturally.
+- The explicit instantiation **definition** may appear only once in the entire program. Two of them in different `.cpp` files is a One Definition Rule (ODR) violation, and is not required to be diagnosed.
+- An explicitly specialized member is unaffected — explicit instantiation skips it.
+
+### Where you have already been using it
+
+The standard library ships these declarations. libstdc++ and libc++ both carry `extern template class basic_string<char>;` in `<string>`, with the definitions inside the shipped library binary. That is why including `<string>` is far cheaper than its size suggests.
+
+### When it pays off
+
+| Situation | Worth it? |
+|-----------|-----------|
+| One instantiation included by hundreds of TUs, with out-of-line members | Yes — the classic case |
+| Heavy STL specializations shared across a large codebase | Yes |
+| Small header-only class, everything defined in-class | No — inline members are exempt anyway |
+| A specialization used in two or three TUs | No — the maintenance cost exceeds the saving |
+| Type used across a DLL or shared library boundary | Measure first — export attributes interact with this |
 
 ---
 

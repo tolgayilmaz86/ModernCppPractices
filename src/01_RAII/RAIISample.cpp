@@ -1,10 +1,15 @@
 #include "RAIISample.hpp"
 #include "SampleRegistry.hpp"
 #include <chrono>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <span>
+#include <stdexcept>
 #include <string>
 #include <thread>
+#include <utility>
+#include <vector>
 
 // Use anonymous namespace to ensure internal linkage and avoid ODR violations
 namespace {
@@ -102,6 +107,98 @@ public:
   ScopedTimer &operator=(ScopedTimer &&) = delete;
 };
 
+// --- Stand-in for a legacy C driver header we are not allowed to change ---
+// The API is the classic acquire/release pair plus a (pointer, length) call.
+using DeviceHandle = void *;
+
+struct LegacyDevice {
+  int id;
+};
+
+int c_driver_init(DeviceHandle *handle) {
+  if (!handle) {
+    return -1;
+  }
+  auto *device = new LegacyDevice{42}; // stands in for malloc() in real C code
+  *handle = device;
+  std::cout << "[C driver] init() -> device #" << device->id << std::endl;
+  return 0;
+}
+
+int c_driver_process(DeviceHandle handle, const std::uint8_t *buffer, int len) {
+  if (!handle || !buffer || len <= 0) {
+    return -1;
+  }
+  auto *device = static_cast<LegacyDevice *>(handle);
+  unsigned checksum = 0;
+  for (int i = 0; i < len; ++i) {
+    checksum += static_cast<unsigned>(buffer[i]);
+  }
+  std::cout << "[C driver] process() -> device #" << device->id << ", " << len
+            << " bytes, checksum = " << checksum << std::endl;
+  return 0;
+}
+
+int c_driver_deinit(DeviceHandle handle) {
+  if (!handle) {
+    return -1;
+  }
+  auto *device = static_cast<LegacyDevice *>(handle);
+  std::cout << "[C driver] deinit() -> device #" << device->id << std::endl;
+  delete device;
+  return 0;
+}
+
+// RAII wrapper around the C driver: init() in the constructor, deinit() in the
+// destructor, and std::span instead of a raw (pointer, length) pair.
+class DeviceWrapper {
+private:
+  DeviceHandle handle = nullptr;
+
+public:
+  // Constructor: Acquire resource (initialize the device)
+  DeviceWrapper() {
+    if (c_driver_init(&handle) != 0) {
+      throw std::runtime_error("Failed to initialize C driver");
+    }
+  }
+
+  // Destructor: Release resource (deinitialize the device)
+  ~DeviceWrapper() {
+    if (handle) {
+      c_driver_deinit(handle);
+    }
+  }
+
+  // A handle must have exactly one owner - copying would deinit() it twice
+  DeviceWrapper(const DeviceWrapper &) = delete;
+  DeviceWrapper &operator=(const DeviceWrapper &) = delete;
+
+  // Moving transfers ownership and leaves the source with a null handle
+  DeviceWrapper(DeviceWrapper &&other) noexcept
+      : handle(std::exchange(other.handle, nullptr)) {}
+  DeviceWrapper &operator=(DeviceWrapper &&other) noexcept {
+    if (this != &other) {
+      if (handle) {
+        c_driver_deinit(handle);
+      }
+      handle = std::exchange(other.handle, nullptr);
+    }
+    return *this;
+  }
+
+  // std::span carries the pointer and the length together, so the caller can
+  // never hand the C API a mismatched (buffer, len) pair. It is a non-owning
+  // view - the caller still owns the bytes.
+  int process(std::span<const std::uint8_t> buffer) {
+    if (!handle) {
+      return -1;
+    }
+    return c_driver_process(handle, buffer.data(),
+                            static_cast<int>(buffer.size()));
+  }
+};
+
 } // end anonymous namespace
 
 void RAIISample::run() {
@@ -152,6 +249,39 @@ void RAIISample::run() {
     std::this_thread::sleep_for(std::chrono::milliseconds(25));
     // outerTimer reports after inner is done
   }
+
+  // Example 3: RAII wrapper around a legacy C driver, using std::span
+  std::cout << "\n=== Example 3: Legacy C Driver Wrapper (RAII + std::span) ==="
+            << std::endl;
+  try {
+    // c_driver_init() runs here
+    DeviceWrapper device;
+
+    std::vector<std::uint8_t> packet{0x01, 0x02, 0x03, 0x04, 0x05};
+
+    // The vector converts to a span implicitly - no length to pass by hand
+    if (device.process(packet) != 0) {
+      throw std::runtime_error("C driver processing failed");
+    }
+
+    // A subspan is just another view: no copy, no pointer arithmetic
+    if (device.process(std::span{packet}.subspan(2)) != 0) {
+      throw std::runtime_error("C driver processing failed");
+    }
+
+    // The driver rejects an empty payload, so this one throws...
+    std::vector<std::uint8_t> emptyPacket;
+    if (device.process(emptyPacket) != 0) {
+      throw std::runtime_error("C driver processing failed on empty payload");
+    }
+
+    std::cout << "This line is never reached." << std::endl;
+  } catch (const std::exception &e) {
+    // ...and c_driver_deinit() has already run during stack unwinding
+    std::cerr << "Error: " << e.what() << std::endl;
+  }
+  std::cout << "Device released automatically - no manual deinit() call."
+            << std::endl;
 
   std::cout << "\nAll RAII examples completed." << std::endl;
 }
