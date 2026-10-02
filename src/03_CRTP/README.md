@@ -8,6 +8,12 @@ CRTP is an idiom in C++ where a class `Derived` inherits from a template class `
 
 **The Solution: CRTP** allows base classes to call derived class methods statically, providing compile-time polymorphism and reusable mixins.
 
+What is the overhead of virtual functions? Why would you want to avoid them?
+- **Runtime overhead**: Virtual functions require a virtual function table lookup at runtime
+- **Memory overhead**: Each object with virtual functions has a pointer to the vtable
+- **Performance impact**: The indirection can cause cache misses and slower execution
+> Especialy if you are working in a performance critical application, like a game engine or real-time system, you may want to avoid virtual functions and use CRTP instead.
+
 ## Key Benefits
 
 - **Zero runtime overhead**: All calls are resolved at compile time
@@ -34,6 +40,9 @@ public:
 class Widget : public Counter<Widget> {
     // Widget now has counting functionality
 };
+
+Widget w1, w2;
+std::cout << Widget::getCount(); // Outputs 2
 ```
 
 ### 2. Comparison Operators
@@ -74,12 +83,13 @@ private:
 
 class Shape : public Cloneable<Shape> {
 private:
+    // this* is to  call the copy constructor
     Shape* doClone() const override { return new Shape(*this); }
 };
 ```
 
 ### 4. Real-world example: Sensor Base
-Say that we have 10 different types of Feed Sensors. 
+Say that we have 10 different types of Sensors. 
 They all share common logic but have different hardware driver calls (I2C vs SPI). 
 Here is a pseudo-code skeleton of how I would implement a SensorBase using CRTP 
 so that the `read()` call is resolved at compile time (no v-table cost), 
@@ -153,19 +163,109 @@ The pattern works because:
 | **Code bloat is acceptable** | Embedded systems with specific hardware types |
 
 **Example: High-Performance Math Library**
+
+Libraries such as Eigen and Blaze use CRTP to build *expression templates*. This technique lets `v1 + v2 + v3` run as one loop with no temporary vectors.
+
+#### The problem: the naive `operator+`
+
+The obvious way to add vectors returns a new `Vector` from each `+`:
+
 ```cpp
-// CRTP for zero-overhead expression templates
+Vector operator+(const Vector& a, const Vector& b) {
+    Vector out(a.size());                     // heap allocation
+    for (size_t i = 0; i < a.size(); ++i) out[i] = a[i] + b[i];
+    return out;
+}
+
+Vector result = v1 + v2 + v3;
+// Step 1: tmp    = v1 + v2   -> 1 allocation, 1 loop
+// Step 2: result = tmp + v3  -> 1 allocation, 1 loop
+```
+
+For `N` additions you pay for `N` allocations and `N` passes over memory. With large vectors, the memory traffic costs more than the arithmetic.
+
+#### The fix: describe the sum, compute it later
+
+Instead of computing a result, `operator+` returns a small object that *describes* the sum. The work happens only when you assign the expression to a real `Vector`.
+
+```cpp
+// 1. The CRTP base: "anything that behaves like a vector"
 template <typename Derived>
 struct VectorExpr {
-    double operator[](size_t i) const { 
-        return static_cast<const Derived&>(*this)[i]; 
+    double operator[](std::size_t i) const {
+        return static_cast<const Derived&>(*this)[i];
+    }
+    std::size_t size() const {
+        return static_cast<const Derived&>(*this).size();
     }
 };
 
-struct Vector : VectorExpr<Vector> { /*...*/ };
+// 2. A node that represents "lhs + rhs" without computing it yet
+template <typename Lhs, typename Rhs>
+struct VectorSum : VectorExpr<VectorSum<Lhs, Rhs>> {
+    const Lhs& lhs;
+    const Rhs& rhs;
 
-// v1 + v2 + v3 compiles to single loop - no temporaries!
+    VectorSum(const Lhs& l, const Rhs& r) : lhs(l), rhs(r) {
+        assert(l.size() == r.size());
+    }
+    double operator[](std::size_t i) const { return lhs[i] + rhs[i]; }
+    std::size_t size() const { return lhs.size(); }
+};
+
+// 3. operator+ accepts any two expressions and returns a new node
+template <typename Lhs, typename Rhs>
+VectorSum<Lhs, Rhs> operator+(const VectorExpr<Lhs>& l, const VectorExpr<Rhs>& r) {
+    return {static_cast<const Lhs&>(l), static_cast<const Rhs&>(r)};
+}
+
+// 4. The concrete vector: the only type that owns memory
+class Vector : public VectorExpr<Vector> {
+public:
+    Vector(std::initializer_list<double> init) : data_(init) {}
+
+    // Evaluates the whole expression tree in ONE loop
+    template <typename E>
+    Vector(const VectorExpr<E>& expr) : data_(expr.size()) {
+        for (std::size_t i = 0; i < data_.size(); ++i) {
+            data_[i] = expr[i];
+        }
+    }
+
+    double operator[](std::size_t i) const { return data_[i]; }
+    std::size_t size() const { return data_.size(); }
+
+private:
+    std::vector<double> data_;
+};
+
+Vector v1{1, 2, 3}, v2{4, 5, 6}, v3{7, 8, 9};
+Vector result = v1 + v2 + v3;   // {12, 15, 18}
 ```
+
+#### What the compiler does with `v1 + v2 + v3`
+
+1. `v1 + v2` returns a `VectorSum<Vector, Vector>`. No arithmetic runs yet.
+2. Adding `v3` returns a `VectorSum<VectorSum<Vector, Vector>, Vector>`. The type itself now encodes the expression tree.
+3. The `Vector` constructor loops once. Each `expr[i]` expands to `(v1[i] + v2[i]) + v3[i]`.
+4. Every call is resolved at compile time, so the optimizer inlines them all. The final loop is the same as one you would write by hand:
+
+```cpp
+for (size_t i = 0; i < n; ++i)
+    result[i] = v1[i] + v2[i] + v3[i];   // 1 allocation, 1 loop, vectorizable
+```
+
+#### Why CRTP is the key ingredient
+
+- **It limits `operator+` to vector-like types.** The parameters are `VectorExpr<Lhs>` and `VectorExpr<Rhs>`, so `operator+` never matches `int`, `std::string` or other unrelated types.
+- **It accepts vectors and expressions alike.** A `Vector` and a `VectorSum<...>` both derive from `VectorExpr<...>`, so expressions nest to any depth.
+- **It keeps every call static.** A virtual `operator[]` would cost an indirect call per element per node. It would also block inlining and SIMD vectorization, which removes the whole benefit.
+
+#### Pitfalls
+
+- **Dangling references with `auto`.** Each node stores references to its operands, and the inner `VectorSum` is a temporary. `auto e = v1 + v2 + v3;` stores the expression, not a `Vector`, and the inner node is destroyed at the end of the line. Write `Vector e = ...` to force evaluation. Eigen documents the same rule.
+- **Aliasing.** For element-wise operations like `+`, `v1 = v1 + v2` is safe. For operations where `result[i]` reads other indices, such as matrix multiply, writing into an operand corrupts the result. Libraries handle this with a temporary or an explicit `noalias()`.
+- **Long error messages.** A mistake inside a deep expression produces errors that name types like `VectorSum<VectorSum<Vector, Vector>, Vector>`. C++20 concepts can make these errors shorter.
 
 ### Use Runtime Polymorphism (Virtual Functions) When:
 

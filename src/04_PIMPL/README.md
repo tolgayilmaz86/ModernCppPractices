@@ -4,7 +4,7 @@
 
 Pimpl, short for "Pointer to Implementation", is a C++ idiom that hides implementation details of a class from its public interface. The class contains only a pointer to a separate implementation class that contains all the actual data members and method implementations.
 
-**The Problem:** When a class's implementation changes, all code that includes its header must be recompiled. This creates tight coupling between implementation and interface.
+**The Problem:** When a class's implementation changes, all code that includes its header must be recompiled. This creates tight coupling between implementation and interface. Also sometimes if you only ship header files for your library/APIs/SDKs, you may want to hide implementation details for security or intellectual property reasons.
 
 **The Solution: Pimpl** Separate the interface from the implementation using a pointer. Changes to implementation don't require recompiling client code.
 
@@ -22,8 +22,8 @@ Pimpl, short for "Pointer to Implementation", is a C++ idiom that hides implemen
 // widget.hpp - Public interface
 class Widget {
 private:
-    class Impl;  // Forward declaration
-    std::unique_ptr<Impl> pimpl_;
+    class SDKWidget;  // Forward declaration
+    std::unique_ptr<SDKWidget> _sdkWidget;
 public:
     Widget();
     ~Widget();
@@ -31,11 +31,11 @@ public:
 };
 
 // widget.cpp - Implementation
-class Widget::Impl {
+class Widget::SDKWidget {
     // All data members and private methods
 };
 
-Widget::Widget() : pimpl_(std::make_unique<Impl>()) {}
+Widget::Widget() : _sdkWidget(std::make_unique<SDKWidget>()) {}
 Widget::~Widget() = default;
 // ... method implementations
 ```
@@ -43,20 +43,20 @@ Widget::~Widget() = default;
 ## Important Considerations
 
 ### Copy Semantics
-Must implement copy constructor and assignment operator to ensure deep copying:
+**Must implement copy constructor and assignment operator to ensure deep copying:**
 
 ```cpp
 Widget::Widget(const Widget& other)
-    : pimpl_(std::make_unique<Impl>(*other.pimpl_)) {}
+    : _sdkWidget(std::make_unique<SDKWidget>(*other._sdkWidget)) {}
 
 Widget& Widget::operator=(const Widget& other) {
-    pimpl_ = std::make_unique<Impl>(*other.pimpl_);
+    _sdkWidget = std::make_unique<SDKWidget>(*other._sdkWidget);
     return *this;
 }
 ```
 
 ### Move Semantics
-Can be defaulted in C++11+:
+Can be defaulted in and from C++11+:
 
 ```cpp
 Widget::Widget(Widget&& other) noexcept = default;

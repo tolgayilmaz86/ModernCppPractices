@@ -127,7 +127,9 @@ class AnyPrintable {
 public:
     // Constructor accepts any printable type
     // You can read here as; 
-    // AnyPrintable can be constructed from any type T that satisfies the Concept (i.e., has a print method). The Model<T> is created to wrap the specific type T, and the Concept interface allows us to call print() without knowing the actual type at compile time.
+    // AnyPrintable can be constructed from any type T that satisfies the Concept (i.e., has a print method).
+    // The Model<T> is created to wrap the specific type T, 
+    // and the Concept interface allows us to call print() without knowing the actual type at compile time.
     template <typename T>
     AnyPrintable(T value) : ptr(std::make_unique<Model<T>>(std::move(value))) {}
     
@@ -349,8 +351,17 @@ struct ShapeBase {
 };
 
 struct Circle : ShapeBase<Circle> {
+    // Circle has a base class, so Circle{5.0} would try to initialize
+    // ShapeBase<Circle> with 5.0. The constructor avoids that.
+    explicit Circle(double r) : radius(r) {}
     double radius;
     double computeArea() const { return 3.14159 * radius * radius; }
+};
+
+struct Rectangle : ShapeBase<Rectangle> {
+    Rectangle(double w, double h) : width(w), height(h) {}
+    double width, height;
+    double computeArea() const { return width * height; }
 };
 
 // External: Type Erasure to store different shapes
@@ -393,3 +404,57 @@ shapes.push_back(Rectangle{3, 4});
 for (auto& shape : shapes) 
     std::cout << shape.area() << "\n";
 ```
+
+#### What happens when `shapes.push_back(Circle{5.0});` runs
+
+The call goes through two phases. The compiler does the first phase while it builds your program. The CPU does the second phase when the line runs.
+
+**At compile time**
+
+1. **Find a matching `push_back`.** `std::vector<AnyShape>` has two overloads: `push_back(const AnyShape&)` and `push_back(AnyShape&&)`. 
+Neither takes a `Circle`, so the compiler looks for a conversion. It finds the template constructor `AnyShape(T shape)`, which is not `explicit`, and deduces `T = Circle`. The converted value is a temporary, so the compiler picks `push_back(AnyShape&&)`.
+2. **Instantiate the templates for `Circle`.** The compiler generates this code:
+   - `AnyShape::AnyShape<Circle>(Circle)`, the constructor.
+   - `AnyShape::Model<Circle>`, a class that holds a `Circle`.
+   - `Model<Circle>::area()`, which calls `ShapeBase<Circle>::area()`, which calls `Circle::computeArea()`.
+   - A vtable for `Model<Circle>`, with entries for the destructor and `area()`.
+3. **Inline the CRTP layer.** Inside `Model<Circle>::area()`, the compiler knows the exact type of `shape_`. Therefore it inlines `ShapeBase<Circle>::area()` and `Circle::computeArea()`. With `-O2`, GCC reduces `Model<Circle>::area()` to one load and two multiplications:
+
+```asm
+AnyShape::Model<Circle>::area() const:
+    movsd  8(%rdi), %xmm1     ; load radius (offset 8, after the vptr)
+    movsd  .LC0(%rip), %xmm0  ; load 3.14159
+    mulsd  %xmm1, %xmm0
+    mulsd  %xmm1, %xmm0
+    ret
+```
+
+`Model<Circle>` is the last place where the compiler knows the type is `Circle`. All code outside it sees only `Concept`.
+
+**At run time**
+
+1. `Circle{5.0}` creates a `Circle` with `radius = 5.0`. Since C++17, this temporary initializes the constructor parameter `shape` directly, so no copy is made.
+2. `std::make_unique<Model<Circle>>` allocates a `Model<Circle>` on the heap. The `Model` constructor sets the hidden vtable pointer (vptr) to the vtable of `Model<Circle>`. It then moves the `Circle` into `shape_`.
+3. The `unique_ptr<Model<Circle>>` converts to `unique_ptr<Concept>` and is stored in `_ptr`. **This step is the erasure.** From here on, the `AnyShape` holds only a `Concept*`.
+4. `push_back` moves the temporary `AnyShape` into the vector. The move copies one pointer, and the `Circle` stays where it is on the heap. If the vector is full, it allocates a bigger buffer and moves the existing elements, which also copies only pointers.
+5. The temporary `AnyShape` is destroyed. Its `_ptr` is now empty, so nothing is freed.
+
+After the call, memory looks like this:
+
+```
+ shapes (vector buffer)    heap: Model<Circle>         vtable for Model<Circle>
+┌────────────────┐        ┌─────────────────────┐     ┌───────────────────────┐
+│ AnyShape[0]    │        │ vptr ───────────────┼───▶│ ~Model<Circle>()      │
+│   _ptr ────────┼──────▶│ shape_.radius = 5.0 │     │ Model<Circle>::area() │
+└────────────────┘        └─────────────────────┘     └───────────────────────┘
+```
+
+`shapes.push_back(Rectangle{3, 4});` repeats the same steps with `T = Rectangle`. The compiler generates a second set: `Model<Rectangle>`, its own `area()` and its own vtable. The vector can store both shapes because each element is the same `AnyShape` type: one pointer.
+
+#### What happens when `shape.area()` runs
+
+1. `AnyShape::area()` calls `_ptr->area()`. The compiler sees only `Concept::area()`, which is virtual, so it emits an indirect call.
+2. At run time, the CPU reads the vptr from the heap object. It then reads the `area()` entry from the vtable.
+3. The CPU jumps to `Model<Circle>::area()`, which is the inlined code shown above.
+
+Each `area()` call therefore costs two memory loads and one indirect call. That is the price of type erasure. The CRTP layer adds nothing to this cost, because the compiler removed it at compile time.

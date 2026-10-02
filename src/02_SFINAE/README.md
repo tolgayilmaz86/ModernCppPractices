@@ -2,11 +2,14 @@
 
 ## Overview
 
-SFINAE stands for "Substitution Failure Is Not An Error" and is a C++ programming technique that allows templates to be specialized based on the ability of types to compile with certain expressions. It's a key mechanism behind template metaprogramming and enables compile-time introspection and conditional compilation.
+SFINAE stands for "Substitution Failure Is Not An Error" and is a C++ programming technique that allows templates to be specialized based on the ability of types to compile with certain expressions. 
+It's a key mechanism behind template metaprogramming and enables compile-time introspection and conditional compilation.
+
 **The Problem:**
 You want to write a template function that only works with certain types (e.g., only for types with a `.size()` method).
 
 **What is SFINAE?**
+
 When the compiler tries to instantiate a template, if substituting the type causes an invalid expression, the compiler doesn't error - it just removes that overload from consideration. This lets you create conditional function overloads.
 
 ```cpp
